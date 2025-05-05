@@ -14,7 +14,16 @@ def extract_json_from_gemini_output(text: str) -> str:
 
 def render_pdf_upload_section():
     with st.expander("📄 Upload a PDF file", expanded=True):
+        # Upload button section
         uploaded_file = st.file_uploader("Upload PDF file", type=["pdf"], label_visibility="collapsed")
+
+        # Clear button
+        if "pdf_text" in st.session_state:
+            if st.button("🗑️ Clear PDF"):
+                del st.session_state["pdf_text"]
+                del st.session_state["pdf_info"]
+                del st.session_state["pdf_language"]
+                st.rerun()
 
         # 若已解析 pdf 就不要重複執行
         if uploaded_file and "pdf_text" not in st.session_state:
@@ -55,7 +64,7 @@ def render_pdf_upload_section():
             )
 
             with st.spinner("🤖 Gemini is extracting ESG report information..."):
-                result = chat_with_gemini(prompt)
+                result = chat_with_gemini(prompt, restrict = False)
 
             try:
                 cleaned = extract_json_from_gemini_output(result)
@@ -69,7 +78,7 @@ def render_pdf_upload_section():
 
                 if not missing_or_empty:
                     st.session_state["pdf_info"] = response
-                    st.success(
+                    st.info(
                         f"✅ ESG report info extracted:\n\n"
                         f"📌 **Company Name:** {response['company_name']}\n"
                         f"🏭 **Industry:** {response['industry']}\n"
@@ -86,12 +95,6 @@ def render_pdf_upload_section():
             except Exception as e:
                 st.warning(f"⚠️ Failed to parse Gemini output as JSON: {e}")
                 st.code(result)
-
-        # Clear button
-        if "pdf_text" in st.session_state:
-            if st.button("🗑️ Clear PDF"):
-                del st.session_state["pdf_text"]
-                st.rerun()
 
 
 
