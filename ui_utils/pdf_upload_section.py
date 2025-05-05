@@ -14,7 +14,22 @@ def extract_json_from_gemini_output(text: str) -> str:
 
 def render_pdf_upload_section():
     with st.expander("📄 Upload a PDF file", expanded=True):
-        uploaded_file = st.file_uploader("Upload PDF file", type=["pdf"], label_visibility="collapsed")
+        # Upload button section
+        uploaded_file = st.file_uploader(
+            "Upload PDF file",
+            type=["pdf"],
+            label_visibility="collapsed",
+            key=st.session_state.get("file_uploader_key", "default_uploader")
+        )
+
+        # Clear button
+        if "pdf_text" in st.session_state:
+            if st.button("🗑️ Clear PDF"):
+                del st.session_state["pdf_text"]
+                del st.session_state["pdf_info"]
+                del st.session_state["pdf_language"]
+                st.session_state["file_uploader_key"] = str(time.time())  # 重新生成 key
+                st.rerun()
 
         # 若已解析 pdf 就不要重複執行
         if uploaded_file and "pdf_text" not in st.session_state:
@@ -55,7 +70,7 @@ def render_pdf_upload_section():
             )
 
             with st.spinner("🤖 Gemini is extracting ESG report information..."):
-                result = chat_with_gemini(prompt)
+                result = chat_with_gemini(prompt, restrict = False)
 
             try:
                 cleaned = extract_json_from_gemini_output(result)
@@ -69,7 +84,7 @@ def render_pdf_upload_section():
 
                 if not missing_or_empty:
                     st.session_state["pdf_info"] = response
-                    st.success(
+                    st.info(
                         f"✅ ESG report info extracted:\n\n"
                         f"📌 **Company Name:** {response['company_name']}\n"
                         f"🏭 **Industry:** {response['industry']}\n"
@@ -86,57 +101,3 @@ def render_pdf_upload_section():
             except Exception as e:
                 st.warning(f"⚠️ Failed to parse Gemini output as JSON: {e}")
                 st.code(result)
-
-        # Clear button
-        if "pdf_text" in st.session_state:
-            if st.button("🗑️ Clear PDF"):
-                del st.session_state["pdf_text"]
-                st.rerun()
-
-
-
-def display_pretty_table(df):
-    st.dataframe(
-        df.style.set_properties(**{
-            'text-align': 'center'
-        }).set_table_styles([
-            {'selector': 'thead th', 'props': [('text-align', 'center')]}
-        ])
-    )
-
-# alert section
-def show_dismissible_alert(key: str, text: str, alert_type="warning"):
-    colors = {
-        "warning": {"bg": "#FFF3CD", "border": "#FFA502"},
-        "info": {"bg": "#D1ECF1", "border": "#0C5460"},
-        "success": {"bg": "#D4EDDA", "border": "#28A745"},
-        "danger": {"bg": "#F8D7DA", "border": "#DC3545"},
-    }
-
-    style = colors.get(alert_type, colors["warning"])
-
-    if f"hide_{key}" not in st.session_state:
-        st.session_state[f"hide_{key}"] = False
-
-    if not st.session_state[f"hide_{key}"]:
-
-        # 將 ❌ 放在 alert 裡面
-        close = st.button("❌", key=f"close_{key}", help="Close this alert")
-
-        if close:
-            st.session_state[f"hide_{key}"] = True
-            return  # 提前結束，不顯示 alert
-
-        # 顯示 alert 本體
-        st.markdown(
-            f"""
-            <div style="padding:10px 10px 10px 10px;background-color:{style['bg']};
-                        border-left:6px solid {style['border']};
-                        margin-bottom:10px;position:relative;border-radius:5px;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <div>{text}</div>
-                </div>
-            </div>
-            """,
-            unsafe_allow_html=True
-        )

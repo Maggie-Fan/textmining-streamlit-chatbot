@@ -35,8 +35,22 @@ user_proxy = UserProxyAgent(
     is_termination_msg=lambda x: content_str(x.get("content")).find("ALL DONE") >= 0,
 )
 
-def chat_with_gemini(prompt: str) -> str:
-    prompt_template = f"{prompt}"
+def chat_with_gemini(prompt: str, restrict = True) -> str:
+    if restrict:
+        prompt_template = f"""
+        You are an ESG analysis assistant. Your role is to help users understand, interpret, and analyze ESG (Environmental, Social, Governance) reports and related topics.
+
+        Before answering, first check if the user’s message is meaningfully related to ESG concepts, sustainability reporting, or corporate responsibility.
+
+        If the user’s message is not relevant to ESG or sustainability, **do not** answer the question directly. Instead, gently remind the user to keep the conversation focused on ESG-related topics.
+
+        Here is the user message:
+        \"\"\"{prompt}\"\"\"
+
+        Please generate your response below:
+        """
+    else:
+        prompt_template = prompt
 
     try:
         message = {"role": "user", "content": prompt_template}

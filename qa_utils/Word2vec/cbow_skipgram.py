@@ -7,7 +7,7 @@ from gensim.utils import simple_preprocess
 from sklearn.decomposition import PCA
 from nltk.corpus import stopwords
 from pdf_context import preprocess_pdf_sentences
-from ui_utils import display_pretty_table
+from ui_utils.ui_utils import display_pretty_table
 
 # --- 確保 nltk 資料齊全 ---
 nltk_packages = ['punkt', 'brown', 'stopwords']
