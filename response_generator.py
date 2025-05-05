@@ -2,6 +2,7 @@ import re
 import streamlit as st
 from pdf_context import get_pdf_context
 from qa_utils.Word2vec import view_2d, view_3d, cbow_skipgram
+from esg_analysis import analyze_esg_from_pdf
 
 # 匯入 Gemini Agent，並確認 key 是否存在
 try:
@@ -80,7 +81,8 @@ def generate_response(prompt):
             return f"📊 Working on clustering analysis..."
 
         elif prompt == "esg analysis":
-            return f"🌱 Working on ESG analysis..."
+            # return f"🌱 Working on ESG analysis..."
+            return analyze_esg_from_pdf()
 
     # 非內建指令：使用 Gemini（如果啟用）
     elif GEMINI_ENABLED:
