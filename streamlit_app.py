@@ -10,9 +10,11 @@ from pdf_context import *
 from response_generator import generate_response
 
 def stream_data(stream_str):
+    if stream_str == None:
+        return "No prompt has provided."
     for word in stream_str.split(" "):
         yield word + " "
-        time.sleep(0.15)
+        time.sleep(0.1) # 0.15
 
 def is_valid_image_url(url):
     try:
