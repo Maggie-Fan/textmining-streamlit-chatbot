@@ -47,7 +47,11 @@ A simple Streamlit app that shows how to build a chatbot using OpenAI's GPT-3.5.
    - Apply for Gemini API key: https://aistudio.google.com/app/apikey
    - About API quota: https://console.cloud.google.com/apis/api/generativelanguage.googleapis.com/quotas
    - About autogen using Gemini: https://microsoft.github.io/autogen/0.2/docs/topics/non-openai-models/cloud-gemini_vertexai/
+   - Debug note: Additional manual install autogen instead of `pip install -r requirements.txt`
+      ```
+      $ pip install autogen
+      ```
 
 See deployed:
-- Production(ckip-allowed): https://brian-textmining-chatbot-finalproject.streamlit.app/
+- Production (ckip-allowed): https://brian-textmining-chatbot-finalproject.streamlit.app/
 - Test: https://brian-textmining-chatbot.streamlit.app/

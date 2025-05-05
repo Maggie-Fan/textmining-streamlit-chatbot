@@ -53,7 +53,7 @@ def analyze_esg_from_pdf():
         )
 
     with st.spinner("🤖 Gemini is reading and analyzing..."):
-        result = chat_with_gemini(prompt)
+        result = chat_with_gemini(prompt, restrict = False)
 
     if language == "chinese":
         result = clean_chinese_markdown_spacing(result)
