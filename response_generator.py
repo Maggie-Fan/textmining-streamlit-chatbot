@@ -1,7 +1,9 @@
+import json
 import re
 import streamlit as st
 from pdf_context import get_pdf_context
 from qa_utils.Word2vec import view_2d, view_3d, cbow_skipgram
+from esg_analysis import analyze_esg_from_pdf
 
 # 匯入 Gemini Agent，並確認 key 是否存在
 try:
@@ -36,51 +38,59 @@ def generate_response(prompt):
         "cbow",
         "skipgram",
         "negative sampling",
+        "show session state", # for debug
     ]
+
+    # for debug
+    if prompt == "show session state":
+        # st.write("🔍 Current session_state:")
+        st.json(st.session_state)
+        return f"🔍 Current session_state:"
 
     # 指令：PDF / Word2Vec / 分析模組
     if prompt in prompt_lists or "show pdf page" in prompt:
+        if pdf_context:
+            if prompt == "show content":
+                return f"""
+                🤖 Here's what I found from the uploaded PDF:\n
+                {pdf_context}
+                ----------------------------------\n
+                """
 
-        if (prompt == "show content" and not pdf_context) or \
-           ("show pdf page" in prompt and not pdf_context):
-            return f"📂 Please upload a PDF file to get context."
+            elif "show pdf page" in prompt:
+                match = re.search(r"show pdf page (\d+)", prompt)
+                if match:
+                    page_number = int(match.group(1))
+                    return get_pdf_context(page=page_number)
+                else:
+                    return "⚠️ Please specify the page number, e.g., `Show PDF page 2`."
 
-        elif prompt == "show content":
-            return f"""
-            🤖 Here's what I found from the uploaded PDF:\n
-            {pdf_context}
-            ----------------------------------\n
-            """
+            elif prompt == "clustering analysis":
+                return f"📊 Working on clustering analysis..."
 
-        elif "show pdf page" in prompt:
-            match = re.search(r"show pdf page (\d+)", prompt)
-            if match:
-                page_number = int(match.group(1))
-                return get_pdf_context(page=page_number)
+            elif prompt == "esg analysis":
+                # return f"🌱 Working on ESG analysis..."
+                return analyze_esg_from_pdf()
+
+        else:
+            if prompt == "vector semantics - word2vec":
+                return (
+                    "📊 You're now in the **Vector Semantics - Word2Vec** module!\n\n"
+                    "You can enter one of the following prompts to run specific visualizations:\n"
+                    "- `view2d` → 2D Word Embedding Visualization\n"
+                    "- `view3d` → 3D Word Embedding Visualization\n"
+                    "- `cbow` → CBOW model explanation or demo\n"
+                    "- `skipgram` → Skip-gram model explanation or demo\n"
+                    "- `negative sampling` → Negative Sampling demo\n\n"
+                    "💡 For example, type `view2d` to run the 2D vector space visualization."
+                )
+
+            elif prompt in vector_semantics_tasks:
+                st.session_state["pending_vector_task"], message = vector_semantics_tasks[prompt]
+                return message
+
             else:
-                return "⚠️ Please specify the page number, e.g., `Show PDF page 2`."
-
-        elif prompt == "vector semantics - word2vec":
-            return (
-                "📊 You're now in the **Vector Semantics - Word2Vec** module!\n\n"
-                "You can enter one of the following prompts to run specific visualizations:\n"
-                "- `view2d` → 2D Word Embedding Visualization\n"
-                "- `view3d` → 3D Word Embedding Visualization\n"
-                "- `cbow` → CBOW model explanation or demo\n"
-                "- `skipgram` → Skip-gram model explanation or demo\n"
-                "- `negative sampling` → Negative Sampling demo\n\n"
-                "💡 For example, type `view2d` to run the 2D vector space visualization."
-            )
-
-        elif prompt in vector_semantics_tasks:
-            st.session_state["pending_vector_task"], message = vector_semantics_tasks[prompt]
-            return message
-
-        elif prompt == "clustering analysis":
-            return f"📊 Working on clustering analysis..."
-
-        elif prompt == "esg analysis":
-            return f"🌱 Working on ESG analysis..."
+                return f"📂 Please upload a PDF file to get context."
 
     # 非內建指令：使用 Gemini（如果啟用）
     elif GEMINI_ENABLED:
