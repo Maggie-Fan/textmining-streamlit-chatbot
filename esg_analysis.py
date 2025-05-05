@@ -52,7 +52,7 @@ def analyze_esg_from_pdf():
             f"{pdf_text}"
         )
 
-    with st.spinner("🤖 Gemini 正在閱讀並分析報告..."):
+    with st.spinner("🤖 Gemini is reading and analyzing..."):
         result = chat_with_gemini(prompt)
 
     if language == "chinese":
