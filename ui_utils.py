@@ -15,7 +15,12 @@ def extract_json_from_gemini_output(text: str) -> str:
 def render_pdf_upload_section():
     with st.expander("📄 Upload a PDF file", expanded=True):
         # Upload button section
-        uploaded_file = st.file_uploader("Upload PDF file", type=["pdf"], label_visibility="collapsed")
+        uploaded_file = st.file_uploader(
+            "Upload PDF file",
+            type=["pdf"],
+            label_visibility="collapsed",
+            key=st.session_state.get("file_uploader_key", "default_uploader")
+        )
 
         # Clear button
         if "pdf_text" in st.session_state:
@@ -23,6 +28,7 @@ def render_pdf_upload_section():
                 del st.session_state["pdf_text"]
                 del st.session_state["pdf_info"]
                 del st.session_state["pdf_language"]
+                st.session_state["file_uploader_key"] = str(time.time())  # 重新生成 key
                 st.rerun()
 
         # 若已解析 pdf 就不要重複執行
@@ -95,8 +101,6 @@ def render_pdf_upload_section():
             except Exception as e:
                 st.warning(f"⚠️ Failed to parse Gemini output as JSON: {e}")
                 st.code(result)
-
-
 
 def display_pretty_table(df):
     st.dataframe(
