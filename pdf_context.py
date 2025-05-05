@@ -170,18 +170,32 @@ def extract_text_by_page(doc, max_pages=40, skip_pages=[]):
 
     return formatted_full_text
 
-# --- 取得 PDF全文 ---
+# --- 取得 PDF 內容 ---
 def get_pdf_context(page="all") -> str:
     if "pdf_text" not in st.session_state:
         return ""
 
+    # 取得 PDF 指定頁數
     if page != "all":
         for p in st.session_state["pdf_text"]:
             if p["page"] == page:
-                return f"[Page {p['page']}]: {p['content']}"
+                content = p["content"]
+                if p["content"] in ["", None, "None", "none"]:
+                    content = "No contents have been extracted."
+                return f"[Page {p['page']}]: {content}"
         return f"Page {page} not found."
 
-    return "\n\n".join(f"[Page {p['page']}]: {p['content']}" for p in st.session_state["pdf_text"])
+    # 取得 PDF 全文
+    result = []
+    for p in st.session_state["pdf_text"]:
+        content = p["content"]
+        if content in ["", None, "None", "none"]:
+            content = "No contents have been extracted."
+        else:
+            content = content  # 顯式寫出來供閱讀
+        result.append(f"[Page {p['page']}]: {content}")
+
+    return "\n\n".join(result)
 
 # --- PDF預處理（自動分中文/英文）---
 def preprocess_pdf_sentences(raw_text, tokenize=True):
