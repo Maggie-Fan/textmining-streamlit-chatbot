@@ -5,7 +5,9 @@ import requests
 from openai import OpenAI
 from db_utils import *
 from qa_utils.Word2vec import view_2d, view_3d, cbow_skipgram
-from ui_utils import *
+from ui_utils.pdf_upload_section import render_pdf_upload_section
+from ui_utils.profile_section import render_profile_section
+from ui_utils.ui_utils import *
 from pdf_context import *
 from response_generator import generate_response
 
@@ -62,19 +64,7 @@ def render_sidebar():
         st.markdown("---")
         selected_lang = st.selectbox("🌐 Language", ["English", "繁體中文"], index=1)
         st.session_state['lang_setting'] = selected_lang
-
-        with st.expander("🧑‍💻 Profile Settings", expanded=False):
-            with st.form(key="profile_form"):
-                new_name = st.text_input("User Name", value=st.session_state.get("user_name", "Brian"))
-                new_image = st.text_input("Avatar Image URL", value=st.session_state.get("user_image", ""))
-                submitted = st.form_submit_button("💾 Save Profile")
-
-                if submitted:
-                    save_user_profile(new_name, new_image)
-                    st.session_state["user_name"] = new_name
-                    st.session_state["user_image"] = new_image
-                    st.success("Profile saved! Please refresh to see changes.")
-                    st.rerun()
+        render_profile_section()
 
 def render_vector_task_section():
     if "vector_task_function" not in st.session_state:
