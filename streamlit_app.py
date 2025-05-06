@@ -1,22 +1,15 @@
 import json
 import streamlit as st
-import time
 import requests
 from openai import OpenAI
 from db_utils import *
 from qa_utils.Word2vec import view_2d, view_3d, cbow_skipgram
 from ui_utils.pdf_upload_section import render_pdf_upload_section
+from ui_utils.chat_section import *
 from ui_utils.profile_section import render_profile_section
 from ui_utils.ui_utils import *
 from pdf_context import *
-from response_generator import generate_response
 
-def stream_data(stream_str):
-    if stream_str == None:
-        return "No prompt has provided."
-    for word in stream_str.split(" "):
-        yield word + " "
-        time.sleep(0.1) # 0.15
 
 def is_valid_image_url(url):
     try:
@@ -33,7 +26,7 @@ def load_example_from_json(json_path, key):
         data = json.load(f)
     return data.get(key, "")
 
-def render_sidebar():
+def render_sidebar(chat_container):
     with st.sidebar:
         st_c_1 = st.container(border=True)
         with st_c_1:
@@ -49,6 +42,12 @@ def render_sidebar():
                 st.image("https://www.w3schools.com/howto/img_avatar.png")
 
         st.markdown("---")
+
+        with st.expander("🌱 ESG Report Analysis", expanded=False):
+            if st.button("📄 ESG Analysis"):
+                chat(prompt = "esg analysis", chat_container = chat_container, write = False)
+            if st.button("📄 Show Content"):
+                chat(prompt = "show content", chat_container = chat_container, write = False)
 
         with st.expander("📦 Vector Semantics - Word2vec", expanded=False):
             if st.button("🧭 Vector space - 2D View"):
@@ -77,7 +76,7 @@ def render_vector_task_section():
     col1, col2 = st.columns(2)
     with col1:
         if st.button("🔖 Load Example Sentences"):
-            example_text = load_example_from_json("db/examples.json", "vector semantic example")
+            example_text = load_example_from_json("db/examples/word2vec_sentence_examples.json", "vector semantic example")
             st.session_state["user_input_text"] = example_text
 
     user_input_text = st.text_area(
@@ -126,36 +125,6 @@ def render_vector_task_section():
 
     st.markdown("---")
 
-def render_chat_section():
-    st_c_chat = st.container(border=True)
-
-    if "messages" not in st.session_state:
-        st.session_state.messages = []
-    else:
-        for msg in st.session_state.messages:
-            if msg["role"] == "user":
-                st_c_chat.chat_message(msg["role"], avatar=st.session_state.get("user_image", "")).markdown((msg["content"]))
-            elif msg["role"] == "assistant":
-                st_c_chat.chat_message(msg["role"]).markdown((msg["content"]))
-            else:
-                image_tmp = msg.get("image")
-                if image_tmp:
-                    st_c_chat.chat_message(msg["role"], avatar=image_tmp).markdown((msg["content"]))
-                else:
-                    st_c_chat.chat_message(msg["role"]).markdown((msg["content"]))
-
-    def chat(prompt: str):
-        chat_user_image = st.session_state.get("user_image", "https://www.w3schools.com/howto/img_avatar.png")
-        st_c_chat.chat_message("user", avatar=chat_user_image).write(prompt)
-        st.session_state.messages.append({"role": "user", "content": prompt})
-
-        response = generate_response(prompt)
-        st.session_state.messages.append({"role": "assistant", "content": response})
-        st_c_chat.chat_message("assistant").write_stream(stream_data(response))
-
-    if prompt := st.chat_input(placeholder="Please input your command", key="chat_bot"):
-        chat(prompt)
-
 def clear_vector_session_state():
     """清除跟 Vector 任務有關的所有 session_state 變數"""
     keys_to_clear = [
@@ -188,9 +157,12 @@ def main():
 
     st.title(f"💬 {st.session_state['user_name']}'s Chatbot")
 
-    render_sidebar()
     render_pdf_upload_section()
-    render_chat_section()
+
+    chat_container = render_chat_container()
+    render_sidebar(chat_container)
+    render_chat_section(chat_container)
+
     render_vector_task_section()
 
     if "pending_vector_task" in st.session_state:
