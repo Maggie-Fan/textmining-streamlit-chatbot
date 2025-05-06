@@ -43,7 +43,7 @@ def render_sidebar(chat_container):
 
         st.markdown("---")
 
-        with st.expander("🌱 ESG report analysis", expanded=False):
+        with st.expander("🌱 ESG Report Analysis", expanded=False):
             if st.button("📄 ESG Analysis"):
                 chat(prompt = "esg analysis", chat_container = chat_container, write = False)
             if st.button("📄 Show Content"):
