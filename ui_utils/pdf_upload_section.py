@@ -1,3 +1,4 @@
+import io # Process byte obj to file obj
 import json
 import fitz  # PyMuPDF
 import streamlit as st
@@ -22,6 +23,11 @@ def render_pdf_upload_section():
             key=st.session_state.get("file_uploader_key", "default_uploader")
         )
 
+        # Load pdf example button
+        if st.button("📥 Load Example PDF"):
+            with open("db/examples/esg_report_example.pdf", "rb") as f:
+                uploaded_file = io.BytesIO(f.read())  # 包裝成類檔案物件
+
         # 若已解析 pdf 就不要重複執行
         if uploaded_file and "pdf_text" not in st.session_state:
             doc = fitz.open(stream=uploaded_file.read(), filetype="pdf")
@@ -31,6 +37,8 @@ def render_pdf_upload_section():
 
             st.session_state["pdf_text"] = extracted
             st.success("✅ PDF uploaded and parsed successfully!")
+        elif uploaded_file and "pdf_text" in st.session_state:
+            st.warning("📄 A PDF is already loaded. Click 🗑️ Clear PDF to upload a new one.")
 
         # 匯入 Gemini Agent
         try:
@@ -77,8 +85,8 @@ def render_pdf_upload_section():
                     st.session_state["pdf_info"] = response
                     st.info(
                         f"✅ ESG report info extracted:\n\n"
-                        f"📌 **Company Name:** {response['company_name']}\n"
-                        f"🏭 **Industry:** {response['industry']}\n"
+                        f"📌 **Company Name:** {response['company_name']}\n\n"
+                        f"🏭 **Industry:** {response['industry']}\n\n"
                         f"📅 **Report Year:** {response['report_year']}"
                     )
                 else:
