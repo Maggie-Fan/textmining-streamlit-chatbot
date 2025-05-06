@@ -2,14 +2,13 @@ import json
 import streamlit as st
 import requests
 from openai import OpenAI
-from db_utils import *
+from db_utils.profile_db_utils import *
 from qa_utils.Word2vec import view_2d, view_3d, cbow_skipgram
 from ui_utils.pdf_upload_section import render_pdf_upload_section
 from ui_utils.chat_section import *
 from ui_utils.profile_section import render_profile_section
 from ui_utils.ui_utils import *
 from pdf_context import *
-
 
 def is_valid_image_url(url):
     try:
@@ -164,7 +163,6 @@ def main():
     render_chat_section(chat_container)
 
     render_vector_task_section()
-
     if "pending_vector_task" in st.session_state:
         st.session_state["vector_task_function"] = st.session_state["pending_vector_task"]
         del st.session_state["pending_vector_task"]

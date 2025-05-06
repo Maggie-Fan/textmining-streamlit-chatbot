@@ -1,9 +1,9 @@
 import sqlite3
 
-DB_PATH = "db/user_profiles.db"
+PROFILE_DB_PATH = "db/user_profiles.db"
 
 def init_db():
-    with sqlite3.connect(DB_PATH) as conn:
+    with sqlite3.connect(PROFILE_DB_PATH) as conn:
         cursor = conn.cursor()
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS user_profile (
@@ -15,7 +15,7 @@ def init_db():
         conn.commit()
 
 def save_user_profile(user_name, user_image):
-    with sqlite3.connect(DB_PATH) as conn:
+    with sqlite3.connect(PROFILE_DB_PATH) as conn:
         cursor = conn.cursor()
         cursor.execute('DELETE FROM user_profile')  # 確保只有一筆
         cursor.execute('''
@@ -25,7 +25,7 @@ def save_user_profile(user_name, user_image):
         conn.commit()
 
 def get_user_profile():
-    with sqlite3.connect(DB_PATH) as conn:
+    with sqlite3.connect(PROFILE_DB_PATH) as conn:
         cursor = conn.cursor()
         cursor.execute('SELECT user_name, user_image FROM user_profile LIMIT 1')
         row = cursor.fetchone()
