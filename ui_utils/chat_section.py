@@ -11,7 +11,6 @@ def stream_data(stream_str):
         yield word + " "
         time.sleep(0.1)
 
-
 # 建立聊天區塊 container，主程式只需呼叫這個
 def render_chat_container():
     return st.container(border=True)
