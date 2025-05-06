@@ -76,7 +76,7 @@ def render_vector_task_section():
     col1, col2 = st.columns(2)
     with col1:
         if st.button("🔖 Load Example Sentences"):
-            example_text = load_example_from_json("db/examples.json", "vector semantic example")
+            example_text = load_example_from_json("db/examples/word2vec_sentence_examples.json", "vector semantic example")
             st.session_state["user_input_text"] = example_text
 
     user_input_text = st.text_area(
