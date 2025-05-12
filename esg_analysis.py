@@ -1,7 +1,25 @@
-from pdf_context import get_pdf_context
+from pdf_context import get_pdf_context, preprocess_pdf_sentences
 from agents.gemini_agent import chat_with_gemini
 import streamlit as st
 import re
+import os
+import jieba
+import nltk
+import matplotlib.pyplot as plt
+from sklearn.feature_extraction.text import TfidfVectorizer
+from collections import Counter
+from wordcloud import WordCloud
+from ckip_transformers.nlp import CkipPosTagger
+
+# 若部署在 Streamlit Cloud，自動加載這個路徑
+nltk_data_path = "/home/appuser/.nltk_data"
+if os.path.exists(nltk_data_path):
+    nltk.data.path.append(nltk_data_path)
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
+from nltk import pos_tag
+
+pos_tagger = CkipPosTagger()  # 延遲初始化不必要
 
 def clean_chinese_markdown_spacing(text):
     text = text.replace("。\n", "。\n\n").replace("。", "。\n")
@@ -61,3 +79,59 @@ def analyze_esg_from_pdf():
         result = clean_chinese_markdown_spacing(result)
 
     return result
+
+def get_english_noun_adj_tokens(tokens):
+    pos_tags = pos_tag(tokens)
+    filtered = [word for word, pos in pos_tags if pos.startswith("NN") or pos.startswith("JJ")]
+    return filtered
+
+def show_wordcloud():
+    pdf_text = get_pdf_context(page="all")
+    language = st.session_state.get("pdf_language", "english")
+
+    def plot_wordcloud(word_freq, title):
+        FONT_PATH = os.path.join("fonts", "TaipeiSansTCBeta-Regular.ttf")
+        print("[DEBUG] 字型存在？", os.path.exists("fonts/TaipeiSansTCBeta-Regular.ttf"))
+        try:
+            wc = WordCloud(
+                font_path=FONT_PATH if language == "chinese" else None,
+                width=800,
+                height=500,
+                background_color="white"
+            ).generate_from_frequencies(word_freq)
+        except Exception as e:
+            wc = WordCloud(width=800, height=500, background_color="white").generate_from_frequencies(word_freq)
+
+        st.subheader(title)
+        fig, ax = plt.subplots()
+        ax.imshow(wc, interpolation='bilinear')
+        ax.axis("off")
+        st.pyplot(fig)
+
+    # --- 取得已斷詞的句子 ---
+    sentences = preprocess_pdf_sentences(pdf_text, tokenize=True)
+    if not sentences:
+        st.warning("⚠️ No valid sentences extracted.")
+        return
+
+    # --- TF-IDF 統計 ---
+    tfidf = TfidfVectorizer()
+    tfidf_matrix = tfidf.fit_transform(sentences)
+    scores = tfidf_matrix.sum(axis=0).A1
+    tokens = tfidf.get_feature_names_out()
+    tfidf_dict = dict(zip(tokens, scores))
+
+    if language == "chinese":
+        words = list(tfidf_dict.keys())
+        pos_tags = pos_tagger([words])[0]
+        valid_pos_prefix = ("N", "V", "A")  # 名詞、動詞、形容詞
+        filtered = {
+            w: tfidf_dict[w]
+            for w, pos in zip(words, pos_tags)
+            if any(pos.startswith(p) for p in valid_pos_prefix)
+        }
+    else:
+        filtered = tfidf_dict.copy()
+        filtered = {w: tfidf_dict[w] for w in get_english_noun_adj_tokens(list(tfidf_dict.keys()))}
+
+    plot_wordcloud(filtered, "☁️ Word Cloud (with POS)")

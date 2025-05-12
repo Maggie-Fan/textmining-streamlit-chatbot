@@ -25,3 +25,4 @@ transformers>=4.30.0
 # Visualization
 matplotlib
 plotly
+wordcloud
