@@ -6,12 +6,18 @@ import time
 from qa_utils.ckip_word_segmenter_local import LocalCkipWordSegmenter
 
 # --- 確保 nltk 必要資源 ---
-nltk_packages = ['punkt', 'stopwords']
+nltk_packages = ['punkt', 'stopwords', 'averaged_perceptron_tagger', 'averaged_perceptron_tagger_eng']
 for pkg in nltk_packages:
     try:
-        nltk.data.find(f'corpora/{pkg}' if pkg != 'punkt' else f'tokenizers/{pkg}')
+        if pkg == 'punkt':
+            nltk.data.find(f'tokenizers/{pkg}')
+        elif pkg == 'averaged_perceptron_tagger':
+            nltk.data.find(f'taggers/{pkg}')
+        else:
+            nltk.data.find(f'corpora/{pkg}')
     except LookupError:
         nltk.download(pkg, quiet=True)
+
 
 # --- 本地載入 CKIP word segmenter (延遲初始化) ---
 def lazy_init_ckip_ws_driver():

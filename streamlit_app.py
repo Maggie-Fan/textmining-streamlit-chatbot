@@ -9,6 +9,7 @@ from ui_utils.chat_section import *
 from ui_utils.profile_section import render_profile_section
 from ui_utils.ui_utils import *
 from pdf_context import *
+from esg_analysis import *
 
 def is_valid_image_url(url):
     try:
@@ -47,6 +48,8 @@ def render_sidebar(chat_container):
                 chat(prompt = "esg analysis", chat_container = chat_container, write = False)
             if st.button("📄 Show Content"):
                 chat(prompt = "show content", chat_container = chat_container, write = False)
+            if st.button("📊 Show Word Cloud"):
+                st.session_state["show_wordcloud_trigger"] = True
 
         with st.expander("📦 Vector Semantics - Word2vec", expanded=False):
             if st.button("🧭 Vector space - 2D View"):
@@ -167,6 +170,11 @@ def main():
         st.session_state["vector_task_function"] = st.session_state["pending_vector_task"]
         del st.session_state["pending_vector_task"]
         st.rerun()
+
+    # 判斷是否要顯示 Word Cloud
+    if st.session_state.get("show_wordcloud_trigger", False):
+        show_wordcloud()
+        st.session_state["show_wordcloud_trigger"] = False  # 清除觸發
 
 if __name__ == "__main__":
     main()
