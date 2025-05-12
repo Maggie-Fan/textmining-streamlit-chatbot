@@ -1,6 +1,7 @@
 import streamlit as st
 import re
 import nltk
+from nltk import word_tokenize
 import time
 from qa_utils.ckip_word_segmenter_local import LocalCkipWordSegmenter
 
@@ -11,10 +12,6 @@ for pkg in nltk_packages:
         nltk.data.find(f'corpora/{pkg}' if pkg != 'punkt' else f'tokenizers/{pkg}')
     except LookupError:
         nltk.download(pkg, quiet=True)
-
-# --- 讀取英文停用詞 ---
-from nltk.corpus import stopwords
-ENGLISH_STOPWORDS = set(stopwords.words('english'))
 
 # --- 本地載入 CKIP word segmenter (延遲初始化) ---
 def lazy_init_ckip_ws_driver():
@@ -39,6 +36,18 @@ def lazy_init_ckip_ws_driver():
 
             st.success("✅ Local CKIP WS loaded successfully!")
 
+# --- 停用詞表 (自定義 ESG report) ---
+def load_pdf_stopwords():
+    pdf_stopwords = ["None", None, "n", "Col", "Table"]
+    stopwords = set()
+    for word in pdf_stopwords:
+        if isinstance(word, str):
+            stopwords.add(word.lower())
+        else:
+            stopwords.add(word)
+
+    return stopwords
+
 # --- 停用詞表（繁體中文） ---
 def load_chinese_stopwords(filepath='lib/chinese_stopwords.txt'):
     try:
@@ -47,6 +56,13 @@ def load_chinese_stopwords(filepath='lib/chinese_stopwords.txt'):
     except:
         stopwords = set()
     return stopwords
+
+# --- 停用詞表 (English) ---
+def load_english_stopwords():
+    # --- 讀取英文停用詞 ---
+    from nltk.corpus import stopwords
+    english_stopwords = set(stopwords.words('english'))
+    return english_stopwords
 
 # --- 基礎清理 ---
 def clean_text(text):
@@ -80,7 +96,7 @@ def detect_pdf_language(doc, max_pages=10):
         return "unknown"
 
 # --- 中文專用 Preprocessing ---
-def preprocess_text_chinese(text):
+def preprocess_chinese_text(text):
     lazy_init_ckip_ws_driver()
     ws_driver = st.session_state.ckip_ws_driver
 
@@ -94,26 +110,57 @@ def preprocess_text_chinese(text):
     ws = [re.sub(r'\s+', '', w) for w in ws if w.strip()]
 
     # 加強版中文停用詞
-    pdf_words = ["None", None, "n", "Col", "Table"]
+    pdf_stopwords = load_pdf_stopwords()
     self_defined_stopwords = [
         "中", "年", "完成", "共好", "月", "董事", "董事會", "集團", "公司", "目標", "委員會", "兩", "高",
         "主題", "機制", "持續", "提", "提名", "發展", "職場", "參與", "經濟", "核心", "中央", "社會",
         "管理", "相關", "確保", "台灣", "海納", "次", "員工", "全球", "評估", "稽核", "年度", "幸福",
         "共贏", "包容", "單位", "至少", "客戶"
     ]
-    CHINESE_STOPWORDS = load_chinese_stopwords()
-    all_stopwords = set(list(CHINESE_STOPWORDS) + pdf_words + self_defined_stopwords)
-    for w in ws:
-        for word in pdf_words:
-            if word == None:
-                continue
-            elif word.lower() in w.lower():
-                all_stopwords.add(w)
+    chinese_stopwords = load_chinese_stopwords()
+    all_stopwords = set(list(chinese_stopwords) + list(pdf_stopwords) + self_defined_stopwords)
+    # for w in ws:
+    #     for word in pdf_stopwords:
+    #         if word == None:
+    #             continue
+    #         elif word.lower() in w.lower():
+    #             all_stopwords.add(w)
     ws_filtered = [w for w in ws if w not in all_stopwords]
 
     elapsed_time = time.time() - start_time
     # print(f"Preprocess Chinese text completed in {elapsed_time:.2f} seconds.")
     return ws_filtered
+
+# --- 英文專用 Preprocessing ---
+def preprocess_english_text(text):
+    start_time = time.time()
+
+    # --- 基本清理 ---
+    text = re.sub(r'<[^>]+>', '', text)  # 移除 HTML tag
+    text = re.sub(r'[^\u0041-\u007A]', ' ', text)  # 移除非英文字母（保留空格）
+    text = re.sub(r'\s+', ' ', text).strip().lower()  # 去多餘空白並轉小寫
+
+    # --- 分詞 ---
+    tokens = word_tokenize(text)
+
+    # --- 停用詞 ---
+    pdf_stopwords = load_pdf_stopwords()
+    self_defined_stopwords = [
+        "company", "report", "esg", "year", "group", "goal", "committee", "ensure", "management",
+        "employee", "global", "evaluate", "sustainability", "development", "responsibility",
+        "stakeholder", "board", "data", "information", "page", "section"
+    ]
+    english_stopwords = load_english_stopwords()
+
+    all_stopwords = set(list(english_stopwords) + list(pdf_stopwords) + self_defined_stopwords)
+
+    # --- 過濾停用詞 ---
+    filtered_tokens = [w for w in tokens if w.isalpha() and w not in all_stopwords]
+
+    elapsed_time = time.time() - start_time
+    # print(f"Preprocess English text completed in {elapsed_time:.2f} seconds.")
+
+    return filtered_tokens
 
 # --- 擷取每頁內容 ---
 def extract_text_by_page(doc, max_pages=40, skip_pages=[]):
@@ -213,13 +260,15 @@ def preprocess_pdf_sentences(raw_text, tokenize=True):
             continue
 
         if language == "chinese":
-            tokens = preprocess_text_chinese(cleaned)
+            tokens = preprocess_chinese_text(cleaned)
             if tokens:
                 results.append(" ".join(tokens))
         else:
             if tokenize:
-                split_sentences = nltk.sent_tokenize(cleaned)
-                results.extend([s for s in split_sentences if s.strip()])
+                # split_sentences = nltk.sent_tokenize(cleaned)
+                # results.extend([s for s in split_sentences if s.strip()])
+                tokens = preprocess_english_text(cleaned)
+                results.append(" ".join(tokens))
             else:
                 results.append(cleaned)
 

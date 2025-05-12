@@ -1,5 +1,5 @@
 import streamlit as st
-from db_utils import *
+from db_utils.profile_db_utils import *
 
 CORRECT_PASSWORD = "1234"
 

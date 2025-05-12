@@ -1,8 +1,14 @@
+import io # Process byte obj to file obj
 import json
 import fitz  # PyMuPDF
 import streamlit as st
 import re
 from pdf_context import *
+import sqlite3
+from db_utils.esg_report_db_utils import (
+    insert_industry, insert_company, insert_esg_report_by_id
+)
+
 
 # pdf upload section
 def extract_json_from_gemini_output(text: str) -> str:
@@ -22,14 +28,10 @@ def render_pdf_upload_section():
             key=st.session_state.get("file_uploader_key", "default_uploader")
         )
 
-        # Clear button
-        if "pdf_text" in st.session_state:
-            if st.button("🗑️ Clear PDF"):
-                del st.session_state["pdf_text"]
-                del st.session_state["pdf_info"]
-                del st.session_state["pdf_language"]
-                st.session_state["file_uploader_key"] = str(time.time())  # 重新生成 key
-                st.rerun()
+        # Load pdf example button
+        if st.button("📥 Load Example PDF"):
+            with open("db/examples/esg_report_example.pdf", "rb") as f:
+                uploaded_file = io.BytesIO(f.read())  # 包裝成類檔案物件
 
         # 若已解析 pdf 就不要重複執行
         if uploaded_file and "pdf_text" not in st.session_state:
@@ -40,6 +42,8 @@ def render_pdf_upload_section():
 
             st.session_state["pdf_text"] = extracted
             st.success("✅ PDF uploaded and parsed successfully!")
+        elif uploaded_file and "pdf_text" in st.session_state:
+            st.warning("📄 A PDF is already loaded. Click 🗑️ Clear PDF to upload a new one.")
 
         # 匯入 Gemini Agent
         try:
@@ -86,8 +90,8 @@ def render_pdf_upload_section():
                     st.session_state["pdf_info"] = response
                     st.info(
                         f"✅ ESG report info extracted:\n\n"
-                        f"📌 **Company Name:** {response['company_name']}\n"
-                        f"🏭 **Industry:** {response['industry']}\n"
+                        f"📌 **Company Name:** {response['company_name']}\n\n"
+                        f"🏭 **Industry:** {response['industry']}\n\n"
                         f"📅 **Report Year:** {response['report_year']}"
                     )
                 else:
@@ -97,7 +101,76 @@ def render_pdf_upload_section():
                     )
                     # st.code(result)
 
-
             except Exception as e:
                 st.warning(f"⚠️ Failed to parse Gemini output as JSON: {e}")
                 st.code(result)
+
+        # Clear button
+        if "pdf_text" in st.session_state:
+            if st.button("🗑️ Clear PDF"):
+                del st.session_state["pdf_text"]
+                st.session_state.pop("pdf_info", None)
+                st.session_state.pop("pdf_language", None)
+                st.session_state["file_uploader_key"] = str(time.time())  # 重新生成 key
+                st.rerun()
+
+         # If both pdf_info and pdf_text are available, show button to write to DB
+        if "pdf_info" in st.session_state and "pdf_text" in st.session_state:
+            if st.button("📝 Insert this ESG report into the database"):
+                st.subheader("📋 Gemini extracted result (before insert):")
+                st.json(st.session_state["pdf_info"])
+                st.write("🔍 Debug: First 3 pages content =")
+                st.write(st.session_state["pdf_text"][:3])
+
+                company_name = st.session_state["pdf_info"]["company_name"]
+                industry = st.session_state["pdf_info"]["industry"]
+                report_year = int(st.session_state["pdf_info"]["report_year"])
+                text_list = st.session_state["pdf_text"][:3]
+                content = "\n\n".join(
+                    [page["content"] for page in text_list] if isinstance(text_list[0], dict) else text_list
+                )
+
+                try:
+                    with sqlite3.connect("db/esg_reports.db") as conn:
+                        cursor = conn.cursor()
+
+                        cursor.execute("SELECT industry_id FROM Industry WHERE industry_name_en = ?", (industry,))
+                        industry_row = cursor.fetchone()
+                        if not industry_row:
+                            insert_industry(industry_name_zh=None, industry_name_en=industry)
+                            cursor.execute("SELECT industry_id FROM Industry WHERE industry_name_en = ?", (industry,))
+                            industry_row = cursor.fetchone()
+
+                        is_english = bool(re.match(r"^[\w\s\-&.,()]+$", company_name))
+
+                        if is_english:
+                            cursor.execute("SELECT company_id FROM Company WHERE company_name_en = ?", (company_name,))
+                        else:
+                            cursor.execute("SELECT company_id FROM Company WHERE company_name_zh = ?", (company_name,))
+                        company_row = cursor.fetchone()
+
+                        if not company_row:
+                            insert_company(
+                                company_name_zh=None if is_english else company_name,
+                                company_name_en=company_name if is_english else None,
+                                industry_name_zh=None,
+                                industry_name_en=industry
+                            )
+                            if is_english:
+                                cursor.execute("SELECT company_id FROM Company WHERE company_name_en = ?", (company_name,))
+                            else:
+                                cursor.execute("SELECT company_id FROM Company WHERE company_name_zh = ?", (company_name,))
+                            company_row = cursor.fetchone()
+
+                        if not company_row:
+                            raise ValueError(f"❌ No company_id found for '{company_name}'")
+
+                        company_id = company_row[0]
+
+                    insert_esg_report_by_id(company_id, report_year, content)
+                    st.success("✅ ESG report successfully inserted into the database!")
+
+                except Exception as e:
+                    st.error(f"❌ Failed to insert into ESG database: {e}")
+
+             
