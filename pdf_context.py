@@ -9,15 +9,11 @@ from qa_utils.ckip_word_segmenter_local import LocalCkipWordSegmenter
 nltk_packages = ['punkt', 'stopwords', 'averaged_perceptron_tagger', 'averaged_perceptron_tagger_eng']
 for pkg in nltk_packages:
     try:
-        if pkg == 'punkt':
-            nltk.data.find(f'tokenizers/{pkg}')
-        elif pkg == 'averaged_perceptron_tagger':
-            nltk.data.find(f'taggers/{pkg}')
-        else:
-            nltk.data.find(f'corpora/{pkg}')
+        nltk.data.find(f'tokenizers/{pkg}' if pkg == 'punkt' else f'corpora/{pkg}')
     except LookupError:
-        nltk.download(pkg, quiet=True)
-
+        print(f"Downloading NLTK resource: {pkg}")
+        nltk.download(pkg, download_dir="nltk_data")
+nltk.data.path.append("nltk_data")
 
 # --- 本地載入 CKIP word segmenter (延遲初始化) ---
 def lazy_init_ckip_ws_driver():
