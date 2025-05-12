@@ -10,7 +10,7 @@ from wordcloud import WordCloud
 from ckip_transformers.nlp import CkipPosTagger
 
 # 若部署在 Streamlit Cloud，自動加載這個路徑
-nltk_data_path = "/home/appuser/.nltk_data"
+nltk_data_path = "/home/adminuser/nltk_data"
 if os.path.exists(nltk_data_path):
     nltk.data.path.append(nltk_data_path)
 
