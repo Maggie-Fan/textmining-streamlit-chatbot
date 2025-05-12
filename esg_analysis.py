@@ -3,11 +3,9 @@ from agents.gemini_agent import chat_with_gemini
 import streamlit as st
 import re
 import os
-import jieba
 import nltk
 import matplotlib.pyplot as plt
 from sklearn.feature_extraction.text import TfidfVectorizer
-from collections import Counter
 from wordcloud import WordCloud
 from ckip_transformers.nlp import CkipPosTagger
 
@@ -15,11 +13,8 @@ from ckip_transformers.nlp import CkipPosTagger
 nltk_data_path = "/home/appuser/.nltk_data"
 if os.path.exists(nltk_data_path):
     nltk.data.path.append(nltk_data_path)
-from nltk.corpus import stopwords
-from nltk.tokenize import word_tokenize
-from nltk import pos_tag
 
-pos_tagger = CkipPosTagger()  # 延遲初始化不必要
+from nltk import pos_tag
 
 def clean_chinese_markdown_spacing(text):
     text = text.replace("。\n", "。\n\n").replace("。", "。\n")
@@ -86,12 +81,15 @@ def get_english_noun_adj_tokens(tokens):
     return filtered
 
 def show_wordcloud():
+    if "pdf_text" not in st.session_state:
+        st.warning("⚠️ Please upload a PDF for plotting.")
+        return
+
     pdf_text = get_pdf_context(page="all")
     language = st.session_state.get("pdf_language", "english")
 
     def plot_wordcloud(word_freq, title):
         FONT_PATH = os.path.join("fonts", "TaipeiSansTCBeta-Regular.ttf")
-        print("[DEBUG] 字型存在？", os.path.exists("fonts/TaipeiSansTCBeta-Regular.ttf"))
         try:
             wc = WordCloud(
                 font_path=FONT_PATH if language == "chinese" else None,
@@ -102,7 +100,9 @@ def show_wordcloud():
         except Exception as e:
             wc = WordCloud(width=800, height=500, background_color="white").generate_from_frequencies(word_freq)
 
-        st.subheader(title)
+        # 命名圖
+        # 去撈 session 的 pdf_info 裡的三個元素
+
         fig, ax = plt.subplots()
         ax.imshow(wc, interpolation='bilinear')
         ax.axis("off")
@@ -123,6 +123,9 @@ def show_wordcloud():
 
     if language == "chinese":
         words = list(tfidf_dict.keys())
+
+        pos_tagger = CkipPosTagger()  # 延遲初始化不必要
+
         pos_tags = pos_tagger([words])[0]
         valid_pos_prefix = ("N", "V", "A")  # 名詞、動詞、形容詞
         filtered = {
@@ -134,4 +137,14 @@ def show_wordcloud():
         filtered = tfidf_dict.copy()
         filtered = {w: tfidf_dict[w] for w in get_english_noun_adj_tokens(list(tfidf_dict.keys()))}
 
+    st.subheader("☁️ Word Cloud (with POS)")
+
     plot_wordcloud(filtered, "☁️ Word Cloud (with POS)")
+
+    if st.button("📥 E / S / G plot"):
+        st.info("Word cloud plotting in E/S/G dimensions...")
+        st.session_state["show_wordcloud_trigger"] = True
+
+    if st.button("🗑️ Clear ESG wordcloud"):
+        st.session_state["show_wordcloud_trigger"] = False
+        st.rerun()

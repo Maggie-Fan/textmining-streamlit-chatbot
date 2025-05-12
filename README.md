@@ -53,5 +53,5 @@ A simple Streamlit app that shows how to build a chatbot using OpenAI's GPT-3.5.
       ```
 
 See deployed:
-- Production (ckip-allowed): https://brian-textmining-chatbot-finalproject.streamlit.app/
+- Production (ckip-allowed): https://textmining-chatbot-group6-project.streamlit.app/
 - Test: https://brian-textmining-chatbot.streamlit.app/
