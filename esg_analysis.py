@@ -10,7 +10,7 @@ from wordcloud import WordCloud
 from ckip_transformers.nlp import CkipPosTagger
 
 # 若部署在 Streamlit Cloud，自動加載這個路徑
-nltk_data_path = "/home/adminuser/nltk_data"
+nltk_data_path = "/home/appuser/.nltk_data"
 if os.path.exists(nltk_data_path):
     nltk.data.path.append(nltk_data_path)
 
@@ -75,6 +75,8 @@ def analyze_esg_from_pdf():
         result = clean_chinese_markdown_spacing(result)
 
     return result
+
+from nltk.data import load
 
 def get_english_noun_adj_tokens(tokens):
     tagger = load("taggers/averaged_perceptron_tagger/averaged_perceptron_tagger.pickle")
