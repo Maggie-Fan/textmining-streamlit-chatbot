@@ -7,7 +7,7 @@ import time
 from qa_utils.ckip_word_segmenter_local import LocalCkipWordSegmenter
 
 # --- 統一 NLTK 資料目錄為 Cloud 可用路徑 ---
-nltk_data_path = "/home/adminuser/nltk_data"
+nltk_data_path = "/home/appuser/nltk_data"
 os.makedirs(nltk_data_path, exist_ok=True)
 nltk.data.path.append(nltk_data_path)
 
