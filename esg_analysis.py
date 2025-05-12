@@ -15,6 +15,7 @@ if os.path.exists(nltk_data_path):
     nltk.data.path.append(nltk_data_path)
 
 from nltk import pos_tag
+from nltk.data import load
 
 def clean_chinese_markdown_spacing(text):
     text = text.replace("。\n", "。\n\n").replace("。", "。\n")
@@ -76,7 +77,8 @@ def analyze_esg_from_pdf():
     return result
 
 def get_english_noun_adj_tokens(tokens):
-    pos_tags = pos_tag(tokens)
+    tagger = load("taggers/averaged_perceptron_tagger/averaged_perceptron_tagger.pickle")
+    pos_tags = tagger.tag(tokens)
     filtered = [word for word, pos in pos_tags if pos.startswith("NN") or pos.startswith("JJ")]
     return filtered
 
