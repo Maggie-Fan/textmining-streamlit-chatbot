@@ -31,7 +31,8 @@ def analyze_esg_from_pdf():
             "**待改善處**：\n"
             "- ...\n\n"
             "（依序接續列出 社會 與 治理）\n\n"
-            "⚠️ 請避免同一項目出現在多個構面，需根據內容判斷最合適分類。"
+            "⚠️ 請避免同一項目出現在多個構面，需根據內容判斷最合適分類。\n"
+            "⚠️ 若以下報告內容，你判斷不是一個 ESG 報告，則不用產出上述三個構面的分析，並提醒使用者上傳 ESG 報告。\n"
             "📄 報告內容如下：\n"
             f"{pdf_text}"
         )
@@ -48,6 +49,7 @@ def analyze_esg_from_pdf():
             "- **Areas for Improvement**: Any vague statements, missing indicators, repetitive info, or lack of quantitative support (write 'N/A' if none)\n\n"
             "⚠️ Avoid overlaps — each point should appear in only one category.\n"
             "⚠️ If applicable, comment on whether the actions include measurable KPIs, clear timelines, or observable outcomes — but also include meaningful qualitative efforts.\n"
+            "⚠️ If the below content is not identified as a ESG report content, you dont have to analyze it, but gently remind users to upload ESG report.\n"
             "📄 ESG Report Content:\n"
             f"{pdf_text}"
         )
