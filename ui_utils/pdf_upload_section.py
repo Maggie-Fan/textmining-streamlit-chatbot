@@ -96,7 +96,6 @@ def render_pdf_upload_section():
                     )
                     # st.code(result)
 
-
             except Exception as e:
                 st.warning(f"⚠️ Failed to parse Gemini output as JSON: {e}")
                 st.code(result)
