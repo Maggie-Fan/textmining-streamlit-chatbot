@@ -73,6 +73,7 @@ def analyze_esg_from_pdf():
     if language == "chinese":
         result = clean_chinese_markdown_spacing(result)
 
+    # show_wordcloud()
     return result
 
 def get_english_noun_adj_tokens(tokens):
