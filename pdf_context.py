@@ -6,7 +6,7 @@ import time
 from qa_utils.ckip_word_segmenter_local import LocalCkipWordSegmenter
 
 # --- 確保 nltk 必要資源 ---
-nltk_packages = ['punkt', 'stopwords', 'averaged_perceptron_tagger', 'averaged_perceptron_tagger_eng']
+nltk_packages = ['punkt', 'stopwords', 'averaged_perceptron_tagger']
 for pkg in nltk_packages:
     try:
         nltk.data.find(f'tokenizers/{pkg}' if pkg == 'punkt' else f'corpora/{pkg}')
