@@ -88,7 +88,9 @@ def analyze_esg_from_pdf():
     return result
 
 def get_english_noun_adj_tokens(tokens):
-    pos_tags = pos_tag(tokens)
+    print("✅ [DEBUG] Running custom tagger, NOT pos_tag()")
+    tagger = load("taggers/averaged_perceptron_tagger/averaged_perceptron_tagger.pickle")
+    pos_tags = tagger.tag(tokens)
     filtered = [word for word, pos in pos_tags if pos.startswith("NN") or pos.startswith("JJ")]
     return filtered
 
