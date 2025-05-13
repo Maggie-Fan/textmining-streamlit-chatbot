@@ -1,19 +1,24 @@
 import streamlit as st
 import re
+import os
 import nltk
 from nltk import word_tokenize
 import time
 from qa_utils.ckip_word_segmenter_local import LocalCkipWordSegmenter
 
+# --- 統一 NLTK 資料目錄為 Cloud 可用路徑 ---
+nltk_data_path = "/home/appuser/nltk_data"
+os.makedirs(nltk_data_path, exist_ok=True)
+nltk.data.path.append(nltk_data_path)
+
 # --- 確保 nltk 必要資源 ---
-nltk_packages = ['punkt', 'stopwords', 'averaged_perceptron_tagger', 'averaged_perceptron_tagger_eng']
+nltk_packages = ['punkt', 'punkt_tab', 'stopwords', 'averaged_perceptron_tagger']
 for pkg in nltk_packages:
     try:
-        nltk.data.find(f'tokenizers/{pkg}' if pkg == 'punkt' else f'corpora/{pkg}')
+        nltk.data.find(pkg)
     except LookupError:
         print(f"Downloading NLTK resource: {pkg}")
-        nltk.download(pkg, download_dir="nltk_data")
-nltk.data.path.append("nltk_data")
+        nltk.download(pkg, download_dir=nltk_data_path, quiet=True)
 
 # --- 本地載入 CKIP word segmenter (延遲初始化) ---
 def lazy_init_ckip_ws_driver():
