@@ -2,9 +2,8 @@ import streamlit as st
 import autogen
 from autogen import ConversableAgent, LLMConfig
 from autogen import AssistantAgent, UserProxyAgent
-from autogen.code_utils import content_str # for OpenAI
 import traceback
-from tools.esg_tool_register import register_one_agent_all_tools # register_all_tools
+from tools.esg_tool_register import register_all_tools
 
 
 GEMINI_API_KEY = st.secrets.get("GEMINI_API_KEY", None)
@@ -63,16 +62,10 @@ gemini_config = LLMConfig(
 gemini_agent = ConversableAgent(
     name="Gemini",
     llm_config=gemini_config,
-    # max_consecutive_auto_reply=1, # user cannot interact with terminal if set max_consecutive_auto_reply
     system_message=get_agent_persona()
 )
-# register_all_tools(gemini_agent)
+register_all_tools(gemini_agent)
 
-# assistant = AssistantAgent(
-#     "assistant",
-#     llm_config=gemini_config,
-#     max_consecutive_auto_reply=3
-# )
 
 def is_terminated_custom(x):
     try:
@@ -99,48 +92,10 @@ def is_terminated_custom(x):
 
 user_proxy = UserProxyAgent(
     "user_proxy",
-    human_input_mode="NEVER", # "TERMINATE"
+    human_input_mode="NEVER",
     code_execution_config=False,
-    # is_termination_msg=lambda x: content_str(x.get("content")).find("##ALL DONE##") >= 0, # for OpenAI
     is_termination_msg=is_terminated_custom
 )
-register_one_agent_all_tools(agent=gemini_agent, proxy=user_proxy)
-
-def chat_with_gemini(prompt: str, restrict = True) -> str:
-    lang_setting = st.session_state.get("lang_setting", "")
-
-    if restrict:
-        prompt_template = f"""
-        You are an ESG analysis assistant. Your role is to help users understand, interpret, and analyze ESG (Environmental, Social, Governance) reports and related topics.
-
-        Before answering, first check if the user’s message is meaningfully related to ESG concepts, sustainability reporting, or corporate responsibility.
-
-        If the user’s message is not relevant to ESG or sustainability, **do not** answer the question directly. Instead, gently remind the user to keep the conversation focused on ESG-related topics.
-
-        Here is the user message:
-        \"\"\"{prompt}\"\"\"
-
-        Please output in {lang_setting}
-        Please generate your response below:
-        """
-    else:
-        prompt_template = prompt
-
-    try:
-        message = {"role": "user", "content": prompt_template}
-        temp_gemini_agent = ConversableAgent(
-            name="Gemini",
-            llm_config=gemini_config
-        )
-        reply = temp_gemini_agent.generate_reply(messages=[message])
-
-        if not reply or "content" not in reply:
-            return "⚠️ Gemini did not return a valid reply."
-
-        return content_str(reply["content"])
-    except Exception as e:
-        tb = traceback.format_exc()
-        return f"⚠️ Gemini error: {type(e).__name__} - {e}\n\n{tb}"
 
 
 # Extract tool response from Gemini Assitant output
@@ -158,47 +113,39 @@ def extract_final_response(chat_history, tag: str = "##ALL DONE##") -> str:
     chat_history = chat_history[1:]  # Remove initial user prompt if present
 
     # 搜尋工具回應（有 tool_calls）
-    for i, msg in enumerate(chat_history):
-        if "tool_calls" in msg:
-            # 取得工具後的兩個訊息（如果有）
-            msg1 = chat_history[i + 1].get("content", "") if i + 1 < len(chat_history) else ""
-            msg2 = chat_history[i + 2].get("content", "") if i + 2 < len(chat_history) else ""
+    # for i, msg in enumerate(chat_history):
+    #     if "tool_calls" in msg:
+    #         # 取得工具後的兩個訊息（如果有）
+    #         msg1 = chat_history[i + 1].get("content", "") if i + 1 < len(chat_history) else ""
+    #         msg2 = chat_history[i + 2].get("content", "") if i + 2 < len(chat_history) else ""
 
-            def extract_text(x):
-                if isinstance(x, dict):
-                    return x.get("output", "")
-                return str(x)
+    #         def extract_text(x):
+    #             if isinstance(x, dict):
+    #                 return x.get("output", "")
+    #             return str(x)
 
-            combined = extract_text(msg1).strip() + "\n\n" + extract_text(msg2).strip()
-            if combined.strip():
-                return combined.strip()
+    #         combined = extract_text(msg1).strip() + "\n\n" + extract_text(msg2).strip()
+    #         if combined.strip():
+    #             return combined.strip()
 
-    # 如果沒有工具調用或合併失敗，則使用標記搜尋邏輯
-    for msg in chat_history:
-        if "tool_calls" in msg:
-            continue
+    # # 如果沒有工具調用或合併失敗，則使用標記搜尋邏輯
+    # for msg in chat_history:
+    #     if "tool_calls" in msg:
+    #         continue
 
-        content = msg.get("content", "")
-        if isinstance(content, str) and tag in content:
-            content = content.replace(tag, "").strip()
-            if content == "":
-                continue
-            else:
-                return content.replace(tag, "").strip()
-        if isinstance(content, dict):
-            output = content.get("output", "")
-            if isinstance(output, str) and tag in output:
-                return output.replace(tag, "").strip()
+    #     content = msg.get("content", "")
+    #     if isinstance(content, str) and tag in content:
+    #         return content.replace(tag, "").strip()
+    #     if isinstance(content, dict):
+    #         output = content.get("output", "")
+    #         if isinstance(output, str) and tag in output:
+    #             return output.replace(tag, "").strip()
 
     # fallback 最後一則有效內容
     for msg in reversed(chat_history):
         fallback = msg.get("content", "")
-        if isinstance(fallback, str) and fallback.strip() == "":
-            msg = fallback.strip()
-            if msg == "":
-                continue
-            else:
-                return msg
+        if isinstance(fallback, str) and fallback.strip():
+            return fallback.strip()
         if isinstance(fallback, dict) and "output" in fallback:
             return fallback["output"]
     return "⚠️ No valid response found."
@@ -252,12 +199,15 @@ def chat_with_gemini_agent(prompt: str, restrict = True) -> str:
             max_turns=2 # User cannot interact with terminal (user_proxy (to Gemini) will be empty in further turns) if set max_turns
         )
 
+        # response = content_str(result.chat_history[-1]["content"])
+        # if "##ALL DONE##" in response:
+        #     response = response.replace("##ALL DONE##", "").rstrip().rstrip("\n")
+        # return response
+
         chat_history = result.chat_history
+        # user_proxy.update_chat_messages(chat_history)
         print(chat_history)
-        response = extract_final_response(chat_history)
-        if "##ALL DONE##" in response:
-            response = response.replace("##ALL DONE##", "").rstrip().rstrip("\n")
-        return response
+        return extract_final_response(chat_history)
 
     except Exception as e:
         tb = traceback.format_exc()
