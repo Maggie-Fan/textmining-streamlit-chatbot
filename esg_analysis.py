@@ -7,6 +7,7 @@ import nltk
 import matplotlib.pyplot as plt
 from sklearn.feature_extraction.text import TfidfVectorizer
 from wordcloud import WordCloud
+from matplotlib import font_manager as fm
 from ckip_transformers.nlp import CkipPosTagger
 
 # 若部署在 Streamlit Cloud，自動加載這個路徑
@@ -14,7 +15,18 @@ nltk_data_path = "/home/appuser/.nltk_data"
 if os.path.exists(nltk_data_path):
     nltk.data.path.append(nltk_data_path)
 
-from nltk.data import load
+# 自動下載 NLTK 所需資源（避免雲端錯誤）
+try:
+    nltk.data.find("tokenizers/punkt")
+except LookupError:
+    nltk.download("punkt")
+
+try:
+    nltk.data.find("taggers/averaged_perceptron_tagger")
+except LookupError:
+    nltk.download("averaged_perceptron_tagger")
+
+from nltk import pos_tag
 
 def clean_chinese_markdown_spacing(text):
     text = text.replace("。\n", "。\n\n").replace("。", "。\n")
@@ -76,9 +88,7 @@ def analyze_esg_from_pdf():
     return result
 
 def get_english_noun_adj_tokens(tokens):
-    print("✅ [DEBUG] Running custom tagger, NOT pos_tag()")
-    tagger = load("taggers/averaged_perceptron_tagger/averaged_perceptron_tagger.pickle")
-    pos_tags = tagger.tag(tokens)
+    pos_tags = pos_tag(tokens)
     filtered = [word for word, pos in pos_tags if pos.startswith("NN") or pos.startswith("JJ")]
     return filtered
 
@@ -89,6 +99,13 @@ def show_wordcloud():
 
     pdf_text = get_pdf_context(page="all")
     language = st.session_state.get("pdf_language", "english")
+
+    # --- 圖的標題（從 session 中撈公司資訊） ---
+    pdf_info = st.session_state.get("pdf_info", {})
+    company = pdf_info.get("company_name", "Unknown Company")
+    industry = pdf_info.get("industry", "Unknown Industry")
+    year = pdf_info.get("report_year", "Unknown Year")
+    full_title = f"{company} ({year})\n{industry} Sector"
 
     def plot_wordcloud(word_freq, title):
         FONT_PATH = os.path.join("fonts", "TaipeiSansTCBeta-Regular.ttf")
@@ -102,21 +119,24 @@ def show_wordcloud():
         except Exception as e:
             wc = WordCloud(width=800, height=500, background_color="white").generate_from_frequencies(word_freq)
 
-        # 命名圖
-        # 去撈 session 的 pdf_info 裡的三個元素
-
         fig, ax = plt.subplots()
         ax.imshow(wc, interpolation='bilinear')
+
+        if language == "chinese":
+            font_prop = fm.FontProperties(fname=FONT_PATH)
+            ax.set_title(title, fontsize=10, fontproperties=font_prop)
+        else:
+            ax.set_title(title, fontsize=10)
+
         ax.axis("off")
         st.pyplot(fig)
 
-    # --- 取得已斷詞的句子 ---
+    # --- TF-IDF + POS ---
     sentences = preprocess_pdf_sentences(pdf_text, tokenize=True)
     if not sentences:
         st.warning("⚠️ No valid sentences extracted.")
         return
 
-    # --- TF-IDF 統計 ---
     tfidf = TfidfVectorizer()
     tfidf_matrix = tfidf.fit_transform(sentences)
     scores = tfidf_matrix.sum(axis=0).A1
@@ -125,11 +145,9 @@ def show_wordcloud():
 
     if language == "chinese":
         words = list(tfidf_dict.keys())
-
-        pos_tagger = CkipPosTagger()  # 延遲初始化不必要
-
+        pos_tagger = CkipPosTagger()
         pos_tags = pos_tagger([words])[0]
-        valid_pos_prefix = ("N", "V", "A")  # 名詞、動詞、形容詞
+        valid_pos_prefix = ("N", "V", "A")
         filtered = {
             w: tfidf_dict[w]
             for w, pos in zip(words, pos_tags)
@@ -139,14 +157,48 @@ def show_wordcloud():
         filtered = tfidf_dict.copy()
         filtered = {w: tfidf_dict[w] for w in get_english_noun_adj_tokens(list(tfidf_dict.keys()))}
 
-    st.subheader("☁️ Word Cloud (with POS)")
+    # --- 圖顯示邏輯 ---
+    mode = st.session_state.get("wordcloud_mode", None)
 
-    plot_wordcloud(filtered, "☁️ Word Cloud (with POS)")
+    if mode == "main":
+        st.subheader("☁️ Word Cloud (with POS)")
+        plot_wordcloud(filtered, title=full_title)
 
-    if st.button("📥 E / S / G plot"):
-        st.info("Word cloud plotting in E/S/G dimensions...")
-        st.session_state["show_wordcloud_trigger"] = True
+    elif mode == "esg":
+        st.subheader("ESG Dimensions Word Clouds")
 
-    if st.button("🗑️ Clear ESG wordcloud"):
-        st.session_state["show_wordcloud_trigger"] = False
-        st.rerun()
+        # 隨機模擬分類
+        e_words, s_words, g_words = {}, {}, {}
+        for i, (word, score) in enumerate(filtered.items()):
+            r = i % 3
+            if r == 0:
+                e_words[word] = score
+            elif r == 1:
+                s_words[word] = score
+            else:
+                g_words[word] = score
+
+        st.markdown("#### 🌿 Environmental")
+        plot_wordcloud(e_words, title="Environmental Word Cloud")
+
+        st.markdown("#### 🤝 Social")
+        plot_wordcloud(s_words, title="Social Word Cloud")
+
+        st.markdown("#### 🏛️ Governance")
+        plot_wordcloud(g_words, title="Governance Word Cloud")
+
+    # --- 控制按鈕區塊 ---
+    st.markdown("---")
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        if st.button("📄 Show Word Cloud"):
+            st.session_state["wordcloud_mode"] = "main"
+            st.rerun()
+    with col2:
+        if st.button("📥 E / S / G plot"):
+            st.session_state["wordcloud_mode"] = "esg"
+            st.rerun()
+    with col3:
+        if st.button("🗑️ Clear ESG wordcloud"):
+            st.session_state["wordcloud_mode"] = None
+            st.rerun()
