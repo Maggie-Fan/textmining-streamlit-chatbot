@@ -23,9 +23,16 @@ def show_esg_report_table():
             with col_title:
                 st.subheader("📊 ESG Report Table")
             with col_close:
+                import uuid
+                unique_key = f"close_esg_table_{uuid.uuid4().hex[:6]}"
                 if st.button("❌", key=f"close_esg_table_{st.session_state.get('delete_confirm', False)}"):
                     st.session_state["show_esg_table"] = False
                     st.rerun()
+
+
+                # if st.button("❌", key=f"close_esg_table_{st.session_state.get('delete_confirm', False)}"):
+                #     st.session_state["show_esg_table"] = False
+                #     st.rerun()
 
             with st.form("update_esg_form", clear_on_submit=False):
                 if st.form_submit_button("📥 Update ESG DB from TWSE"):
