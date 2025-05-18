@@ -111,66 +111,123 @@ def render_pdf_upload_section():
                 del st.session_state["pdf_text"]
                 st.session_state.pop("pdf_info", None)
                 st.session_state.pop("pdf_language", None)
+                st.session_state.pop("esg_inserted", None)
                 st.session_state["file_uploader_key"] = str(time.time())  # 重新生成 key
                 st.rerun()
 
-         # If both pdf_info and pdf_text are available, show button to write to DB
-        if "pdf_info" in st.session_state and "pdf_text" in st.session_state:
-            if st.button("📝 Insert this ESG report into the database"):
-                st.subheader("📋 Gemini extracted result (before insert):")
-                st.json(st.session_state["pdf_info"])
-                st.write("🔍 Debug: First 3 pages content =")
-                st.write(st.session_state["pdf_text"][:3])
+        # Auto insert into DB if ESG info extracted and not inserted yet
+        if "pdf_info" in st.session_state and "pdf_text" in st.session_state and not st.session_state.get("esg_inserted", False):
+            company_name = st.session_state["pdf_info"]["company_name"]
+            industry = st.session_state["pdf_info"]["industry"]
+            report_year = int(st.session_state["pdf_info"]["report_year"])
+            text_list = st.session_state["pdf_text"][:3]
+            content = "\n\n".join(
+                [page["content"] for page in text_list] if isinstance(text_list[0], dict) else text_list
+            )
 
-                company_name = st.session_state["pdf_info"]["company_name"]
-                industry = st.session_state["pdf_info"]["industry"]
-                report_year = int(st.session_state["pdf_info"]["report_year"])
-                text_list = st.session_state["pdf_text"][:3]
-                content = "\n\n".join(
-                    [page["content"] for page in text_list] if isinstance(text_list[0], dict) else text_list
-                )
+            try:
+                with sqlite3.connect("db/esg_reports.db") as conn:
+                    cursor = conn.cursor()
 
-                try:
-                    with sqlite3.connect("db/esg_reports.db") as conn:
-                        cursor = conn.cursor()
-
+                    cursor.execute("SELECT industry_id FROM Industry WHERE industry_name_en = ?", (industry,))
+                    industry_row = cursor.fetchone()
+                    if not industry_row:
+                        insert_industry(industry_name_zh=None, industry_name_en=industry)
                         cursor.execute("SELECT industry_id FROM Industry WHERE industry_name_en = ?", (industry,))
                         industry_row = cursor.fetchone()
-                        if not industry_row:
-                            insert_industry(industry_name_zh=None, industry_name_en=industry)
-                            cursor.execute("SELECT industry_id FROM Industry WHERE industry_name_en = ?", (industry,))
-                            industry_row = cursor.fetchone()
 
-                        is_english = bool(re.match(r"^[\w\s\-&.,()]+$", company_name))
+                    is_english = bool(re.match(r"^[\w\s\-&.,()]+$", company_name))
 
+                    if is_english:
+                        cursor.execute("SELECT company_id FROM Company WHERE company_name_en = ?", (company_name,))
+                    else:
+                        cursor.execute("SELECT company_id FROM Company WHERE company_name_zh = ?", (company_name,))
+                    company_row = cursor.fetchone()
+
+                    if not company_row:
+                        insert_company(
+                            company_name_zh=None if is_english else company_name,
+                            company_name_en=company_name if is_english else None,
+                            industry_name_zh=None,
+                            industry_name_en=industry
+                        )
                         if is_english:
                             cursor.execute("SELECT company_id FROM Company WHERE company_name_en = ?", (company_name,))
                         else:
                             cursor.execute("SELECT company_id FROM Company WHERE company_name_zh = ?", (company_name,))
                         company_row = cursor.fetchone()
 
-                        if not company_row:
-                            insert_company(
-                                company_name_zh=None if is_english else company_name,
-                                company_name_en=company_name if is_english else None,
-                                industry_name_zh=None,
-                                industry_name_en=industry
-                            )
-                            if is_english:
-                                cursor.execute("SELECT company_id FROM Company WHERE company_name_en = ?", (company_name,))
-                            else:
-                                cursor.execute("SELECT company_id FROM Company WHERE company_name_zh = ?", (company_name,))
-                            company_row = cursor.fetchone()
+                    if not company_row:
+                        raise ValueError(f"❌ No company_id found for '{company_name}'")
 
-                        if not company_row:
-                            raise ValueError(f"❌ No company_id found for '{company_name}'")
+                    company_id = company_row[0]
 
-                        company_id = company_row[0]
+                # insert_esg_report_by_id(company_id, report_year, content)
+                insert_esg_report_by_id(company_id, report_year, content, overwrite=True)
 
-                    insert_esg_report_by_id(company_id, report_year, content)
-                    st.success("✅ ESG report successfully inserted into the database!")
+                st.session_state["esg_inserted"] = True
+                st.success("✅ ESG report auto-inserted into the database!")
 
-                except Exception as e:
-                    st.error(f"❌ Failed to insert into ESG database: {e}")
+            except Exception as e:
+                st.error(f"❌ Auto insert failed: {e}")
+
+        #  # If both pdf_info and pdf_text are available, show button to write to DB
+        # if "pdf_info" in st.session_state and "pdf_text" in st.session_state:
+        #     if st.button("📝 Insert this ESG report into the database"):
+        #         st.subheader("📋 Gemini extracted result (before insert):")
+        #         st.json(st.session_state["pdf_info"])
+        #         st.write("🔍 Debug: First 3 pages content =")
+        #         st.write(st.session_state["pdf_text"][:3])
+
+        #         company_name = st.session_state["pdf_info"]["company_name"]
+        #         industry = st.session_state["pdf_info"]["industry"]
+        #         report_year = int(st.session_state["pdf_info"]["report_year"])
+        #         text_list = st.session_state["pdf_text"][:3]
+        #         content = "\n\n".join(
+        #             [page["content"] for page in text_list] if isinstance(text_list[0], dict) else text_list
+        #         )
+
+        #         try:
+        #             with sqlite3.connect("db/esg_reports.db") as conn:
+        #                 cursor = conn.cursor()
+
+        #                 cursor.execute("SELECT industry_id FROM Industry WHERE industry_name_en = ?", (industry,))
+        #                 industry_row = cursor.fetchone()
+        #                 if not industry_row:
+        #                     insert_industry(industry_name_zh=None, industry_name_en=industry)
+        #                     cursor.execute("SELECT industry_id FROM Industry WHERE industry_name_en = ?", (industry,))
+        #                     industry_row = cursor.fetchone()
+
+        #                 is_english = bool(re.match(r"^[\w\s\-&.,()]+$", company_name))
+
+        #                 if is_english:
+        #                     cursor.execute("SELECT company_id FROM Company WHERE company_name_en = ?", (company_name,))
+        #                 else:
+        #                     cursor.execute("SELECT company_id FROM Company WHERE company_name_zh = ?", (company_name,))
+        #                 company_row = cursor.fetchone()
+
+        #                 if not company_row:
+        #                     insert_company(
+        #                         company_name_zh=None if is_english else company_name,
+        #                         company_name_en=company_name if is_english else None,
+        #                         industry_name_zh=None,
+        #                         industry_name_en=industry
+        #                     )
+        #                     if is_english:
+        #                         cursor.execute("SELECT company_id FROM Company WHERE company_name_en = ?", (company_name,))
+        #                     else:
+        #                         cursor.execute("SELECT company_id FROM Company WHERE company_name_zh = ?", (company_name,))
+        #                     company_row = cursor.fetchone()
+
+        #                 if not company_row:
+        #                     raise ValueError(f"❌ No company_id found for '{company_name}'")
+
+        #                 company_id = company_row[0]
+
+        #             insert_esg_report_by_id(company_id, report_year, content)
+        #             st.success("✅ ESG report successfully inserted into the database!")
+
+        #         except Exception as e:
+        #             st.error(f"❌ Failed to insert into ESG database: {e}")
 
              

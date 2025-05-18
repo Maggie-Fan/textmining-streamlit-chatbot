@@ -105,24 +105,52 @@ def insert_esg_report(company_name, report_year, content):
             VALUES (?, ?, ?)
         """, (company_id, report_year, content))
         conn.commit()
-
-def insert_esg_report_by_id(company_id, report_year, content):
-    with sqlite3.connect(ESG_DB_PATH) as conn:
+        
+def insert_esg_report_by_id(company_id, report_year, content, overwrite=False):
+    with sqlite3.connect("db/esg_reports.db") as conn:
         cursor = conn.cursor()
 
-        cursor.execute("""
-            SELECT 1 FROM ESG_Report
-            WHERE company_id = ? AND report_year = ? AND content = ?
-        """, (company_id, report_year, content))
-        if cursor.fetchone():
-            print("⚠️ Report already exists. Skipping insert.")
-            return
+        if overwrite:
+            cursor.execute("""
+                DELETE FROM ESG_Report
+                WHERE company_id = ? AND report_year = ?
+            """, (company_id, report_year))
+            print(f"🧹 Overwritten ESG report: company_id={company_id}, year={report_year}")
+        else:
+            cursor.execute("""
+                SELECT 1 FROM ESG_Report
+                WHERE company_id = ? AND report_year = ?
+            """, (company_id, report_year))
+            if cursor.fetchone():
+                print("⚠️ Report already exists. Skipping insert.")
+                return
 
         cursor.execute("""
             INSERT INTO ESG_Report (company_id, report_year, content)
             VALUES (?, ?, ?)
         """, (company_id, report_year, content))
         conn.commit()
+
+
+#原本的start
+# def insert_esg_report_by_id(company_id, report_year, content):
+#     with sqlite3.connect(ESG_DB_PATH) as conn:
+#         cursor = conn.cursor()
+
+#         cursor.execute("""
+#             SELECT 1 FROM ESG_Report
+#             WHERE company_id = ? AND report_year = ? AND content = ?
+#         """, (company_id, report_year, content))
+#         if cursor.fetchone():
+#             print("⚠️ Report already exists. Skipping insert.")
+#             return
+
+#         cursor.execute("""
+#             INSERT INTO ESG_Report (company_id, report_year, content)
+#             VALUES (?, ?, ?)
+#         """, (company_id, report_year, content))
+#         conn.commit()
+#end
 
 # def get_company_id_by_en_name(company_name_en):
 #     with sqlite3.connect(ESG_DB_PATH) as conn:
