@@ -1,6 +1,5 @@
 # 在 terminal 下 python init_twse_data.py 就會執行爬蟲把TWSE的產業別和公司名稱存入DB
-
-from qa_utils.twse_scraper import write_twse_example_to_db
+from tools.twse_webscraper import write_twse_example_to_db
 import sqlite3
 import pandas as pd
 

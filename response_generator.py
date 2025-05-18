@@ -5,7 +5,8 @@ from qa_utils.Word2vec import view_2d, view_3d, cbow_skipgram
 from esg_analysis import analyze_esg_from_pdf
 import pandas as pd
 import sqlite3
-from qa_utils.twse_scraper import write_twse_example_to_db
+# from tools.twse_webscraper import write_twse_example_to_db
+
 
 
 
@@ -100,11 +101,12 @@ def generate_response(prompt):
         try:
             from ui_utils.esg_reports_section import show_esg_report_table
             show_esg_report_table()
+            st.session_state["show_esg_table"] = True
             return "📄 ESG Report Table displayed."
         except ImportError as e:
             st.error(f"❌ Unable to show ESG report table: {e}")
             return "❌ Error: ESG report table function not found."
-
+ 
     # 非內建指令：使用 Gemini（如果啟用）
     elif GEMINI_ENABLED:
         with st.spinner("🤖 Gemini is thinking..."):

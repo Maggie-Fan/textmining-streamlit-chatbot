@@ -124,18 +124,18 @@ def insert_esg_report_by_id(company_id, report_year, content):
         """, (company_id, report_year, content))
         conn.commit()
 
-def get_company_id_by_en_name(company_name_en):
-    with sqlite3.connect(ESG_DB_PATH) as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT company_id FROM Company WHERE company_name_en = ?", (company_name_en,))
-        row = cursor.fetchone()
-        if row:
-            return row[0]
-        else:
-            return None
-def get_company_id_by_zh_name(company_name_zh):
-    with sqlite3.connect(ESG_DB_PATH) as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT company_id FROM Company WHERE company_name_zh = ?", (company_name_zh,))
-        row = cursor.fetchone()
-        return row[0] if row else None
+# def get_company_id_by_en_name(company_name_en):
+#     with sqlite3.connect(ESG_DB_PATH) as conn:
+#         cursor = conn.cursor()
+#         cursor.execute("SELECT company_id FROM Company WHERE company_name_en = ?", (company_name_en,))
+#         row = cursor.fetchone()
+#         if row:
+#             return row[0]
+#         else:
+#             return None
+# def get_company_id_by_zh_name(company_name_zh):
+#     with sqlite3.connect(ESG_DB_PATH) as conn:
+#         cursor = conn.cursor()
+#         cursor.execute("SELECT company_id FROM Company WHERE company_name_zh = ?", (company_name_zh,))
+#         row = cursor.fetchone()
+#         return row[0] if row else None

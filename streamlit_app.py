@@ -10,6 +10,9 @@ from ui_utils.profile_section import render_profile_section
 from ui_utils.ui_utils import *
 from pdf_context import *
 from esg_analysis import *
+#add
+from ui_utils.esg_reports_section import show_esg_report_table
+from response_generator import generate_response
 
 def is_valid_image_url(url):
     try:
@@ -177,6 +180,8 @@ def main():
     if st.session_state.get("show_wordcloud_trigger", False):
         show_wordcloud()
         # st.session_state["show_wordcloud_trigger"] = False  # 清除觸發
-
+        
+    if st.session_state.get("show_esg_table", False):
+        show_esg_report_table()
 if __name__ == "__main__":
     main()
