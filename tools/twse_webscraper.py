@@ -2,8 +2,7 @@ import requests
 from bs4 import BeautifulSoup
 import pandas as pd
 from time import sleep
-from db_utils.esg_report_db_utils import init_esg_report_db, insert_company, insert_esg_report
-import random
+from db_utils.esg_report_db_utils import init_esg_report_db, insert_company
 import sqlite3 
 
 def fetch_twse_company_list(url, lang="zh"):
