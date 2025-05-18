@@ -5,10 +5,6 @@ from qa_utils.Word2vec import view_2d, view_3d, cbow_skipgram
 from esg_analysis import analyze_esg_from_pdf
 import pandas as pd
 import sqlite3
-# from tools.twse_webscraper import write_twse_example_to_db
-
-
-
 
 # 匯入 Gemini Agent，並確認 key 是否存在
 try:
