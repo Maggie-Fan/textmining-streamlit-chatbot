@@ -38,27 +38,11 @@ def show_esg_report_table():
                     st.rerun()  
 
             with sqlite3.connect("db/esg_reports.db") as conn:
-                company_df = pd.read_sql_query(
-                    "SELECT company_name_en, company_name_zh FROM Company WHERE company_name_en IS NOT NULL GROUP BY company_name_en ORDER BY company_name_en",
-                    conn)
-                industry_df = pd.read_sql_query(
-                    "SELECT industry_name_en, industry_name_zh FROM Industry WHERE industry_name_en IS NOT NULL GROUP BY industry_name_en ORDER BY industry_name_en",
-                    conn)
+                company_df = get_all_companies()
+                industry_df = get_all_industries()
                 companies = [f"{row['company_name_en']} ({row['company_name_zh']})" for _, row in company_df.iterrows()]
                 industries = [f"{row['industry_name_en']} ({row['industry_name_zh']})" for _, row in industry_df.iterrows()]
-                df = pd.read_sql_query("""
-                    SELECT ESG_Report.report_id,
-                           Company.company_name_en AS company,
-                           Company.company_name_zh AS company_zh,
-                           Industry.industry_name_en AS industry,
-                           Industry.industry_name_zh AS industry_zh,
-                           ESG_Report.report_year AS year,
-                           ESG_Report.content
-                    FROM ESG_Report
-                    JOIN Company ON ESG_Report.company_id = Company.company_id
-                    JOIN Industry ON Company.industry_id = Industry.industry_id
-                    ORDER BY ESG_Report.report_year DESC
-                """, conn)
+                df = get_all_esg_reports()
 
             with st.expander("🔍 Filter Conditions", expanded=True):
                 col1, col2, col3 = st.columns(3)

@@ -1,5 +1,6 @@
 import sqlite3
 import os
+import pandas as pd
 
 ESG_DB_PATH = "db/esg_reports.db"
 
@@ -72,40 +73,6 @@ def insert_company(company_name_zh=None, industry_name_zh=None, company_name_en=
         """, (company_name_zh, company_name_en, industry_id))
         conn.commit()
 
-def insert_esg_report(company_name, report_year, content):
-    with sqlite3.connect(ESG_DB_PATH) as conn:
-        cursor = conn.cursor()
-
-        # Try match by English name first
-        cursor.execute("SELECT company_id FROM Company WHERE company_name_en = ?", (company_name,))
-        row = cursor.fetchone()
-
-        if not row:
-            # Fallback: try matching by Chinese name
-            cursor.execute("SELECT company_id FROM Company WHERE company_name_zh = ?", (company_name,))
-            row = cursor.fetchone()
-
-        if not row:
-            raise ValueError(f"Company '{company_name}' not found in either zh or en. Please insert it first.")
-
-        company_id = row[0]
-
-        # Prevent duplicates
-        cursor.execute("""
-            SELECT 1 FROM ESG_Report
-            WHERE company_id = ? AND report_year = ? AND content = ?
-        """, (company_id, report_year, content))
-        if cursor.fetchone():
-            print("⚠️ Report already exists. Skipping insert.")
-            return
-
-        # Insert report
-        cursor.execute("""
-            INSERT INTO ESG_Report (company_id, report_year, content)
-            VALUES (?, ?, ?)
-        """, (company_id, report_year, content))
-        conn.commit()
-        
 def insert_esg_report_by_id(company_id, report_year, content, overwrite=False):
     with sqlite3.connect("db/esg_reports.db") as conn:
         cursor = conn.cursor()
@@ -132,3 +99,41 @@ def insert_esg_report_by_id(company_id, report_year, content, overwrite=False):
         conn.commit()
 
 
+def get_all_esg_reports():
+    with sqlite3.connect(ESG_DB_PATH) as conn:
+        df = pd.read_sql_query("""
+            SELECT ESG_Report.report_id,
+                   Company.company_name_en AS company,
+                   Company.company_name_zh AS company_zh,
+                   Industry.industry_name_en AS industry,
+                   Industry.industry_name_zh AS industry_zh,
+                   ESG_Report.report_year AS year,
+                   ESG_Report.content
+            FROM ESG_Report
+            JOIN Company ON ESG_Report.company_id = Company.company_id
+            JOIN Industry ON Company.industry_id = Industry.industry_id
+            ORDER BY ESG_Report.report_year DESC
+        """, conn)
+    return df
+
+def get_all_companies():
+    with sqlite3.connect(ESG_DB_PATH) as conn:
+        df = pd.read_sql_query("""
+            SELECT company_name_en, company_name_zh
+            FROM Company
+            WHERE company_name_en IS NOT NULL
+            GROUP BY company_name_en
+            ORDER BY company_name_en
+        """, conn)
+    return df
+
+def get_all_industries():
+    with sqlite3.connect(ESG_DB_PATH) as conn:
+        df = pd.read_sql_query("""
+            SELECT industry_name_en, industry_name_zh
+            FROM Industry
+            WHERE industry_name_en IS NOT NULL
+            GROUP BY industry_name_en
+            ORDER BY industry_name_en
+        """, conn)
+    return df

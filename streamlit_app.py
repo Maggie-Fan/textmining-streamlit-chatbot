@@ -53,6 +53,12 @@ def render_sidebar(chat_container):
                 chat(prompt = "show content", chat_container = chat_container, write = False)
             if st.button("📊 Show Word Cloud"):
                 st.session_state["show_wordcloud_trigger"] = True
+            if st.button("📝 ESG Report Template"):
+                chat(prompt = "esg analysis", chat_container = chat_container, write = False)
+            if st.button("🔍 ESG Report Comparison"):
+                chat(prompt = "esg analysis", chat_container = chat_container, write = False)
+            if st.button("🛠️ Report Optimization"):
+                chat(prompt = "esg analysis", chat_container = chat_container, write = False)
 
         with st.expander("📦 Vector Semantics - Word2vec", expanded=False):
             if st.button("🧭 Vector space - 2D View"):
