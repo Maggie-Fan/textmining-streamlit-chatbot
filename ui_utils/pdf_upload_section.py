@@ -2,17 +2,9 @@ import io # Process byte obj to file obj
 import json
 import fitz  # PyMuPDF
 import streamlit as st
-import re
 from pdf_context import *
 
 # pdf upload section
-def extract_json_from_gemini_output(text: str) -> str:
-    """從 Gemini 回應中清理並提取 JSON 字串"""
-    text = re.sub(r"```json|```", "", text, flags=re.IGNORECASE).strip()
-    json_start = text.find("{")
-    json_end = text.rfind("}") + 1
-    return text[json_start:json_end].strip()
-
 def render_pdf_upload_section():
     with st.expander("📄 Upload a PDF file", expanded=True):
         # Upload button section
@@ -42,7 +34,7 @@ def render_pdf_upload_section():
 
         # 匯入 Gemini Agent
         try:
-            from agents.gemini_agent import chat_with_gemini
+            from agents.gemini_agent import chat_with_gemini, extract_json_from_gemini_output
             GEMINI_ENABLED = bool(st.secrets.get("GEMINI_API_KEY", None))
         except Exception as e:
             GEMINI_ENABLED = False
