@@ -53,6 +53,17 @@ A simple Streamlit app that shows how to build a chatbot using OpenAI's GPT-3.5.
       $ pip install autogen
       ```
 
+### ESG Repots db
+- Initialize the Industry and Company tables into esg_reports.db
+
+   ```
+   $ python init_twse_data.py
+   ```
+- View the contents of Industry, Company, and ESG_Report tables
+   ```
+   $ python view_db.py
+   ```
+
 See deployed:
 - Production (ckip-allowed): https://textmining-chatbot-group6-project.streamlit.app/
 - Test: https://brian-textmining-chatbot.streamlit.app/
