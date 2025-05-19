@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import sqlite3
 from db_utils.esg_report_db_utils import *
+from tools.twse_webscraper import write_twse_example_to_db
 
 def show_esg_report_table():
     if "selected_company" not in st.session_state:
@@ -18,24 +19,22 @@ def show_esg_report_table():
         st.session_state["show_esg_table"] = False
 
     if st.session_state["show_esg_table"]:
+        st.markdown("---")
         with st.container():
             col_title, col_close = st.columns([0.95, 0.05])
             with col_title:
                 st.subheader("📊 ESG Report Table")
             with col_close:
-                import uuid
-                unique_key = f"close_esg_table_{uuid.uuid4().hex[:6]}"
                 if st.button("❌", key=f"close_esg_table_{st.session_state.get('delete_confirm', False)}"):
                     st.session_state["show_esg_table"] = False
                     st.rerun()
 
             with st.form("update_esg_form", clear_on_submit=False):
                 if st.form_submit_button("📥 Update ESG DB from TWSE"):
-                    from tools.twse_webscraper import write_twse_example_to_db
                     write_twse_example_to_db()
                     st.success("✅ TWSE ESG data inserted.")
-                    st.session_state["reload_esg_data"] = True  
-                    st.rerun()  
+                    st.session_state["reload_esg_data"] = True
+                    st.rerun()
 
             with sqlite3.connect("db/esg_reports.db") as conn:
                 company_df = get_all_companies()
