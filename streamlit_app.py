@@ -63,7 +63,7 @@ def render_sidebar(chat_container):
                 st.session_state["vector_task_function"] = cbow_skipgram.run
 
         st.markdown("---")
-        selected_lang = st.selectbox("🌐 Language", ["English", "繁體中文"], index=1)
+        selected_lang = st.selectbox("🌐 Language", ["English", "繁體中文"], index=0)
         st.session_state['lang_setting'] = selected_lang
         render_profile_section()
 
