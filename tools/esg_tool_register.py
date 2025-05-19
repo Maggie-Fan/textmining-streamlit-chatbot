@@ -6,37 +6,37 @@ from tools.esg_tools import (
     esg_analysis
 )
 
-def register_all_tools(agent):
+def register_all_tools(caller_agent, executor_agent):
     """
     Registers all ESG-related tools to the given agent.
     """
     register_function(
         show_pdf_content,
-        caller=agent,
-        executor=agent,
+        caller=caller_agent,
+        executor=executor_agent,
         description="Display the full uploaded PDF text.",
         name="show_pdf_content"
     )
 
     register_function(
         get_pdf_page_content,
-        caller=agent,
-        executor=agent,
+        caller=caller_agent,
+        executor=executor_agent,
         description="Display the content of a specific PDF page. Takes 'page' as an integer argument.",
         name="show_pdf_page_content"
     )
 
     # register_function(
     #     clustering_analysis,
-    #     caller=agent,
-    #     executor=agent,
+    #     caller=caller_agent,
+    #     executor=executor_agent,
     #     description="Perform clustering analysis on the uploaded PDF content."
     # )
 
     register_function(
         esg_analysis,
-        caller=agent,
-        executor=agent,
+        caller=caller_agent,
+        executor=executor_agent,
         description="Extract ESG-related insights from the uploaded PDF.",
         name="esg_analysis"
     )
