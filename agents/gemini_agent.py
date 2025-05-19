@@ -5,6 +5,7 @@ from autogen import AssistantAgent, UserProxyAgent
 from autogen.code_utils import content_str # for OpenAI
 import ast
 import traceback
+import re
 from tools.esg_tool_register import register_one_agent_all_tools # register_all_tools
 
 
@@ -307,3 +308,9 @@ def chat_with_gemini_agent(prompt: str, restrict = True) -> str:
         tb = traceback.format_exc()
         return f"⚠️ Gemini error: {type(e).__name__} - {e}\n\n{tb}"
 
+def extract_json_from_gemini_output(text: str) -> str:
+    """從 Gemini 回應中清理並提取 JSON 字串"""
+    text = re.sub(r"```json|```", "", text, flags=re.IGNORECASE).strip()
+    json_start = text.find("{")
+    json_end = text.rfind("}") + 1
+    return text[json_start:json_end].strip()
