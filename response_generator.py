@@ -7,6 +7,7 @@ from esg_analysis import analyze_esg_from_pdf
 # 匯入 Gemini Agent，並確認 key 是否存在
 try:
     from agents.gemini_agent import chat_with_gemini_agent
+    from agents.two_agents import chat_with_two_gemini_agents
     GEMINI_ENABLED = bool(st.secrets.get("GEMINI_API_KEY", None))
     # print(f"GEMINI_ENABLED: {GEMINI_ENABLED}")
 except Exception as e:
@@ -96,6 +97,7 @@ def generate_response(prompt):
         with st.spinner("🤖 Gemini is thinking..."):
             # return chat_with_gemini(original_prompt)
             return chat_with_gemini_agent(original_prompt)
+            # return chat_with_two_gemini_agents(original_prompt)
 
     else:
         print(GEMINI_ENABLED)
