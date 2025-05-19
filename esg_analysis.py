@@ -104,7 +104,7 @@ def analyze_esg_for_wordcloud(filtered_keywords):
     """
 
     # 呼叫 Gemini 並取得結果
-    with st.spinner("🤖 Gemini is classifying the keywords into ESG dimensions..."):
+    with st.spinner("🤖 Gemini is classifying the keywords showinto ESG dimensions..."):
         result = chat_with_gemini(prompt, restrict=False)
 
     # 嘗試將 Gemini 回傳的內容轉成 JSON
@@ -237,6 +237,7 @@ def show_wordcloud():
         with col3:
             if st.button("🗑️ Clear ESG wordcloud"):
                 # st.session_state["wordcloud_mode"] = None
-                del st.session_state["wordcloud_mode"]
+                if "wordcloud_mode" in st.session_state:
+                    del st.session_state["wordcloud_mode"]
                 st.session_state["show_wordcloud_trigger"] = False
                 st.rerun()
