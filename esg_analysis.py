@@ -1,5 +1,6 @@
 from pdf_context import get_pdf_context, preprocess_pdf_sentences
 from agents.gemini_agent import chat_with_gemini
+import json
 import streamlit as st
 import re
 import os
@@ -69,6 +70,57 @@ def get_english_noun_adj_tokens(tokens):
     pos_tags = pos_tag(tokens)
     filtered = [word for word, pos in pos_tags if pos.startswith("NN") or pos.startswith("JJ")]
     return filtered
+
+def analyze_esg_for_wordcloud(filtered_keywords):
+    # 匯入 Gemini Agent
+    try:
+        from agents.gemini_agent import chat_with_gemini, extract_json_from_gemini_output
+        GEMINI_ENABLED = bool(st.secrets.get("GEMINI_API_KEY", None))
+    except Exception as e:
+        GEMINI_ENABLED = False
+        print(f"❌ Failed to import Gemini agent: {e}")
+        st.warning(f"Gemini Agent not available: {e}")
+
+    # 將 keyword dict 轉成文字（如 "keyword1: 123, keyword2: 87, ..."）
+    keyword_str = ", ".join([f"{k}: {v}" for k, v in filtered_keywords.items()])
+
+    # prompt 結構
+    prompt = f"""
+    You are an ESG assistant. Please classify the following keywords into three categories: Environmental, Social, and Governance.
+
+    Only use the keywords provided, and assign each keyword to **one and only one** category.
+
+    ⚠️ Only return pure JSON with no explanation, no markdown formatting, and no extra text.
+    ✅ The JSON format should look exactly like:
+    {{
+        "Environmental": ["keyword1", "keyword2", ...],
+        "Social": ["keyword3", "keyword4", ...],
+        "Governance": ["keyword5", "keyword6", ...]
+    }}
+
+    Here are the keywords with their frequencies:
+
+    {keyword_str}
+    """
+
+    # 呼叫 Gemini 並取得結果
+    with st.spinner("🤖 Gemini is classifying the keywords showinto ESG dimensions..."):
+        result = chat_with_gemini(prompt, restrict=False)
+
+    # 嘗試將 Gemini 回傳的內容轉成 JSON
+    try:
+        cleaned = extract_json_from_gemini_output(result)
+        classification = json.loads(cleaned)
+        e_words = classification.get("Environmental", [])
+        s_words = classification.get("Social", [])
+        g_words = classification.get("Governance", [])
+    except json.JSONDecodeError as e:
+        # st.error("❌ Failed to parse Gemini response as JSON.")
+        # st.text(result)
+        st.info("⚠️ Unable to classify keywords into ESG categories. Please check the response.")
+        raise e
+
+    return e_words, s_words, g_words
 
 def show_wordcloud():
     if "pdf_text" not in st.session_state:
@@ -143,31 +195,36 @@ def show_wordcloud():
         plot_wordcloud(filtered, title=full_title)
 
     elif mode == "esg":
-        st.subheader("ESG Dimensions Word Clouds")
+        st.subheader("Word Clouds in ESG Dimensions")
 
-        # 隨機模擬分類
-        e_words, s_words, g_words = {}, {}, {}
-        for i, (word, score) in enumerate(filtered.items()):
-            r = i % 3
-            if r == 0:
-                e_words[word] = score
-            elif r == 1:
-                s_words[word] = score
-            else:
-                g_words[word] = score
+        e_worddict, s_worddict, g_worddict = {}, {}, {}
+
+        # Get Top 50 filtered words
+        filtered_keywords = dict(sorted(filtered.items(), key=lambda item: item[1], reverse=True)[:100])
+
+        e_words, s_words, g_words = analyze_esg_for_wordcloud(filtered_keywords)
+        for word, score in filtered_keywords.items():
+            if word in e_words:
+                e_worddict[word] = score
+            elif word in s_words:
+                s_worddict[word] = score
+            elif word in g_words:
+                g_worddict[word] = score
 
         st.markdown("#### 🌿 Environmental")
-        plot_wordcloud(e_words, title="Environmental Word Cloud")
+        plot_wordcloud(e_worddict, title="Environmental Word Cloud")
 
         st.markdown("#### 🤝 Social")
-        plot_wordcloud(s_words, title="Social Word Cloud")
+        plot_wordcloud(s_worddict, title="Social Word Cloud")
 
         st.markdown("#### 🏛️ Governance")
-        plot_wordcloud(g_words, title="Governance Word Cloud")
+        plot_wordcloud(g_worddict, title="Governance Word Cloud")
 
     # --- 控制按鈕區塊 ---
     if "wordcloud_mode" in st.session_state or st.session_state["show_wordcloud_trigger"]:
         st.markdown("---")
+        st.subheader("Word Cloud of ESG Report")
+        st.markdown("#### Please select the mode you want to display:")
         col1, col2, col3 = st.columns(3)
         with col1:
             if st.button("📄 Show Word Cloud"):
@@ -180,6 +237,7 @@ def show_wordcloud():
         with col3:
             if st.button("🗑️ Clear ESG wordcloud"):
                 # st.session_state["wordcloud_mode"] = None
-                del st.session_state["wordcloud_mode"]
+                if "wordcloud_mode" in st.session_state:
+                    del st.session_state["wordcloud_mode"]
                 st.session_state["show_wordcloud_trigger"] = False
                 st.rerun()
