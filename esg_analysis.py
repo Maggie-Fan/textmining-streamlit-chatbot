@@ -72,7 +72,7 @@ def get_english_noun_adj_tokens(tokens):
 
 def show_wordcloud():
     if "pdf_text" not in st.session_state:
-        st.warning("⚠️ Please upload a PDF for plotting.")
+        st.warning("⚠️ Please upload a PDF for plotting word cloud.")
         return
 
     pdf_text = get_pdf_context(page="all")
@@ -166,17 +166,20 @@ def show_wordcloud():
         plot_wordcloud(g_words, title="Governance Word Cloud")
 
     # --- 控制按鈕區塊 ---
-    st.markdown("---")
-    col1, col2, col3 = st.columns(3)
-    with col1:
-        if st.button("📄 Show Word Cloud"):
-            st.session_state["wordcloud_mode"] = "main"
-            st.rerun()
-    with col2:
-        if st.button("📥 E / S / G plot"):
-            st.session_state["wordcloud_mode"] = "esg"
-            st.rerun()
-    with col3:
-        if st.button("🗑️ Clear ESG wordcloud"):
-            st.session_state["wordcloud_mode"] = None
-            st.rerun()
+    if "wordcloud_mode" in st.session_state or st.session_state["show_wordcloud_trigger"]:
+        st.markdown("---")
+        col1, col2, col3 = st.columns(3)
+        with col1:
+            if st.button("📄 Show Word Cloud"):
+                st.session_state["wordcloud_mode"] = "main"
+                st.rerun()
+        with col2:
+            if st.button("📥 E / S / G plot"):
+                st.session_state["wordcloud_mode"] = "esg"
+                st.rerun()
+        with col3:
+            if st.button("🗑️ Clear ESG wordcloud"):
+                # st.session_state["wordcloud_mode"] = None
+                del st.session_state["wordcloud_mode"]
+                st.session_state["show_wordcloud_trigger"] = False
+                st.rerun()
