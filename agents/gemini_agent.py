@@ -188,9 +188,18 @@ def extract_final_response(chat_history, tag: str = "##ALL DONE##") -> str:
                 return combined
 
     # 處理含 tag 的純文字訊息
-    for msg in chat_history:
+    for i, msg in enumerate(chat_history):
+        # 如果訊息中有 tool_calls，表示 tool_calls 失敗
         if "tool_calls" in msg:
             continue
+
+        if i != 0:
+            # 如果不是第一則訊息，檢查前一則是否為空
+            prev_msg = chat_history[i - 1]
+            prev_content = prev_msg.get("content", "")
+            if isinstance(prev_content, str) and not prev_content.strip():
+                continue
+
         content = msg.get("content", "")
         if isinstance(content, str) and tag in content:
             return content.replace(tag, "").strip()
@@ -248,7 +257,10 @@ def chat_with_gemini_agent(prompt: str, restrict = True) -> str:
         """
         # - clustering analysis → Run clustering analysis on the PDF.
     else:
-        tool_usage_guide = "User didnt upload ESG report; please gently remind users to upload one ESG report."
+        tool_usage_guide = """
+        If the user is clearly asking for an analysis of an uploaded ESG report, and no report is currently available, you may gently remind them to upload one.
+        However, if the user is asking general ESG-related questions (e.g., "What is ESG?"), respond directly without requiring a report.
+        """
 
     if restrict:
         prompt_template = f"""
