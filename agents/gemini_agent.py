@@ -143,6 +143,28 @@ def chat_with_gemini(prompt: str, restrict = True) -> str:
         tb = traceback.format_exc()
         return f"⚠️ Gemini error: {type(e).__name__} - {e}\n\n{tb}"
 
+def summarize_messages(messages: list) -> str:
+    """
+    使用 Gemini 對 messages 進行摘要（最近 10 則以外）
+    """
+
+    history_text = ""
+    for msg in messages:
+        role = "User" if msg["role"] == "user" else "Assistant"
+        history_text += f"{role}: {msg['content']}\n"
+
+    prompt = f"""
+    You are a memory summarizer. Summarize the following conversation between a user and an assistant. Focus on preserving key ideas and context, not the exact wording.
+
+    ### Conversation:
+    {history_text}
+
+    ### Summary:
+    """
+    response = chat_with_gemini(prompt, restrict = False)
+
+    return response
+
 # Extract chat history or tool response from Gemini Assitant output
 def extract_final_response(chat_history, tag: str = "##ALL DONE##") -> str:
     """
@@ -247,6 +269,14 @@ def extract_final_response(chat_history, tag: str = "##ALL DONE##") -> str:
 def chat_with_gemini_agent(prompt: str, restrict = True) -> str:
     pdf_content = st.session_state.get("pdf_text", "")
     lang_setting = st.session_state.get("lang_setting", "English")
+    message_history = st.session_state.get("messages", [])
+
+    # 構建歷史對話文字區段
+    # history_text = ""
+    # for msg in message_history[-10:]:  # 只取最近 10 則，避免太長
+    #     role = "User" if msg["role"] == "user" else "Assistant"
+    #     history_text += f"{role}: {msg['content']}\n"
+    history_text = summarize_messages(messages=message_history)
 
     if pdf_content:
         tool_usage_guide = """
@@ -268,6 +298,9 @@ def chat_with_gemini_agent(prompt: str, restrict = True) -> str:
         You are an ESG assistant. You may help the user by answering general ESG-related questions directly.
 
         {tool_usage_guide}
+
+        Here is the prior conversation:
+        {history_text}
 
         Here is the user message:
         \"\"\"{prompt}\"\"\"
