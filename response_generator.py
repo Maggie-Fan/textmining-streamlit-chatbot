@@ -48,6 +48,16 @@ def generate_response(prompt):
         # st.write("🔍 Current session_state:")
         st.json(st.session_state)
         return f"🔍 Current session_state:"
+    if prompt == "show esg report db table":
+        try:
+            from ui_utils.esg_reports_section import show_esg_report_table
+            show_esg_report_table()
+            st.session_state["show_esg_table"] = True
+            return "📄 ESG Report Table displayed."
+        except ImportError as e:
+            st.error(f"❌ Unable to show ESG report table: {e}")
+            return "❌ Error: ESG report table function not found."
+
 
     # 指令：PDF / Word2Vec / 分析模組
     if prompt in prompt_lists or "show pdf page" in prompt:
@@ -93,16 +103,6 @@ def generate_response(prompt):
 
             else:
                 return f"📂 Please upload a PDF file to get context."
-
-    if prompt == "show esg report db table":
-        try:
-            from ui_utils.esg_reports_section import show_esg_report_table
-            show_esg_report_table()
-            st.session_state["show_esg_table"] = True
-            return "📄 ESG Report Table displayed."
-        except ImportError as e:
-            st.error(f"❌ Unable to show ESG report table: {e}")
-            return "❌ Error: ESG report table function not found."
 
     # 非內建指令：使用 Gemini（如果啟用）
     elif GEMINI_ENABLED:
