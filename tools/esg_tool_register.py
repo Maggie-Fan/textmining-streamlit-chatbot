@@ -48,7 +48,7 @@ def register_one_agent_all_tools(agent, proxy):
     tools = [
         ("show_pdf_content", "Display the full uploaded ESG report PDF text.", show_pdf_content),
         ("show_pdf_page_content", "Display the content of a specific ESG report PDF page. Takes 'page' as an integer argument.", get_pdf_page_content),
-        ("esg_analysis", "Extract ESG-related insights from the uploaded  ESG report PDF.", esg_analysis),
+        ("esg_analysis", "Extract ESG-related insights from the uploaded ESG report PDF.", esg_analysis),
         # ("clustering_analysis", "Perform clustering analysis on the uploaded ESG report PDF content.", clustering_analysis),
     ]
 
