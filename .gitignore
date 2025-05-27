@@ -1,9 +1,6 @@
 .streamlit/secrets.toml
 models/ckip-models/ckip-bert-ws
-<<<<<<< HEAD
-=======
 models/ckip-models/bert-base/model.safetensors
->>>>>>> 010d56c (Reinitialize repo after clearing Git corruption)
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -104,11 +104,7 @@ def analyze_esg_for_wordcloud(filtered_keywords):
     """
 
     # 呼叫 Gemini 並取得結果
-<<<<<<< HEAD
-    with st.spinner("🤖 Gemini is classifying the keywords showinto ESG dimensions..."):
-=======
     with st.spinner("🤖 Gemini is classifying the keywords into ESG dimensions..."):
->>>>>>> 010d56c (Reinitialize repo after clearing Git corruption)
         result = chat_with_gemini(prompt, restrict=False)
 
     # 嘗試將 Gemini 回傳的內容轉成 JSON
