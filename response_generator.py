@@ -3,11 +3,6 @@ import streamlit as st
 from pdf_context import get_pdf_context
 from qa_utils.Word2vec import view_2d, view_3d, cbow_skipgram
 from esg_analysis import analyze_esg_from_pdf
-<<<<<<< HEAD
-import pandas as pd
-import sqlite3
-=======
->>>>>>> 010d56c (Reinitialize repo after clearing Git corruption)
 
 # 匯入 Gemini Agent，並確認 key 是否存在
 try:
@@ -61,10 +56,6 @@ def generate_response(prompt):
             st.error(f"❌ Unable to show ESG report table: {e}")
             return "❌ Error: ESG report table function not found."
 
-<<<<<<< HEAD
-
-=======
->>>>>>> 010d56c (Reinitialize repo after clearing Git corruption)
     # 指令：PDF / Word2Vec / 分析模組
     if prompt in prompt_lists or "show pdf page" in prompt:
         if pdf_context:

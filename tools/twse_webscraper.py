@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 import pandas as pd
 from time import sleep
 from db_utils.esg_report_db_utils import init_esg_report_db, insert_company
-import sqlite3 
+import sqlite3
 
 def fetch_twse_company_list(url, lang="zh"):
     headers = {
@@ -37,7 +37,7 @@ def fetch_twse_company_list(url, lang="zh"):
                     "industry": cols[6]
                 })
         sleep(0.5)
-    
+
     return pd.DataFrame(result)
 
 def get_bilingual_twse_company_industry():
@@ -57,43 +57,6 @@ def get_bilingual_twse_company_industry():
     return merged
 
 def write_twse_example_to_db():
-<<<<<<< HEAD
-    # ✅ 先建立資料表
-    init_esg_report_db()
-    # 檢查 DB 是否已經有資料
-    with sqlite3.connect("db/esg_reports.db") as conn:
-        cursor = conn.cursor()
-        cursor.execute("SELECT COUNT(*) FROM Company")
-        company_count = cursor.fetchone()[0]
-        if company_count > 0:
-            print("✅ Company table already has data. Skipping insert.")
-            return
-
-    df = get_bilingual_twse_company_industry()
-
-    # 移除重複公司（用公司名稱中文）
-    df = df.drop_duplicates(subset=["公司名稱中文"]).reset_index(drop=True)
-
-    init_esg_report_db()
-
-    for _, row in df.iterrows():
-        company_zh = row["公司名稱中文"]
-        company_en = row["公司名稱英文"]
-        industry_zh = row["產業別中文"]
-        industry_en = row["產業別英文"]
-
-        try:
-            insert_company(
-                company_name_zh=company_zh,
-                industry_name_zh=industry_zh,
-                company_name_en=company_en,
-                industry_name_en=industry_en
-            )
-        except Exception as e:
-            print(f"❌ Failed to insert: {company_zh} - {industry_zh} — {e}")
-
-
-=======
     # init_esg_report_db()
 
     df = get_bilingual_twse_company_industry()
@@ -118,7 +81,7 @@ def write_twse_example_to_db():
             except Exception as e:
                 print(f"❌ Failed to insert: {company_zh} - {industry_zh} — {e}")
 
-        
+
         cursor.execute("""
             DELETE FROM Company
             WHERE company_name_zh IS NULL
@@ -126,7 +89,7 @@ def write_twse_example_to_db():
                OR industry_id IS NULL
         """)
 
-        
+
         cursor.execute("""
             DELETE FROM Industry
             WHERE industry_name_zh IS NULL
@@ -135,4 +98,3 @@ def write_twse_example_to_db():
 
         conn.commit()
         print("✅ TWSE company & industry data updated and cleaned.")
->>>>>>> 010d56c (Reinitialize repo after clearing Git corruption)

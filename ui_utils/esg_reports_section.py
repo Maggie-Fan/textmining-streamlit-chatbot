@@ -25,11 +25,7 @@ def show_esg_report_table():
             with col_title:
                 st.subheader("📊 ESG Report Table")
             with col_close:
-<<<<<<< HEAD
-                if st.button("❌", key=f"close_esg_table_{st.session_state.get('delete_confirm', False)}"):
-=======
                 if st.button("❌", key=f"close_esg_table"):
->>>>>>> 010d56c (Reinitialize repo after clearing Git corruption)
                     st.session_state["show_esg_table"] = False
                     st.rerun()
 
@@ -81,11 +77,7 @@ def show_esg_report_table():
                 for _, row in df.iterrows():
                     cols = st.columns([0.05, 0.25, 0.25, 0.1, 0.35])
                     with cols[0]:
-<<<<<<< HEAD
-                        if st.checkbox("", key=f"select_{row['report_id']}"):
-=======
                         if st.checkbox("checkbox for record-deletion", label_visibility="collapsed", key=f"select_{row['report_id']}"):
->>>>>>> 010d56c (Reinitialize repo after clearing Git corruption)
                             selected_ids.append(row["report_id"])
                     cols[1].write(f"{row['company']} ({row['company_zh']})")
                     cols[2].write(f"{row['industry']} ({row['industry_zh']})")
@@ -103,14 +95,7 @@ def show_esg_report_table():
                 col_confirm, col_cancel = st.columns(2)
                 with col_confirm:
                     if st.button("✅ Confirm"):
-<<<<<<< HEAD
-                        with sqlite3.connect("db/esg_reports.db") as conn:
-                            cursor = conn.cursor()
-                            cursor.executemany("DELETE FROM ESG_Report WHERE report_id = ?", [(rid,) for rid in st.session_state.selected_to_delete])
-                            conn.commit()
-=======
                         delete_esg_reports_by_ids(st.session_state.selected_to_delete)
->>>>>>> 010d56c (Reinitialize repo after clearing Git corruption)
                         st.success(f"Deleted {len(st.session_state.selected_to_delete)} record(s).")
                         st.session_state.delete_confirm = False
                         st.session_state.selected_to_delete = []
