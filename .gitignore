@@ -1,6 +1,7 @@
 .streamlit/secrets.toml
 models/ckip-models/ckip-bert-ws
 models/ckip-models/bert-base/model.safetensors
+models/ckip-models/bert-base.zip
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
