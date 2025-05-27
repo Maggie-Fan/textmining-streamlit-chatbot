@@ -28,7 +28,9 @@ def lazy_init_ckip_ws_driver():
             # from ckip_transformers.nlp import CkipWordSegmenter, CkipPosTagger, CkipNerChunker
             # st.session_state.ckip_ws_driver = CkipWordSegmenter(model="bert-base")
 
-            st.session_state.ckip_ws_driver = LocalCkipWordSegmenter(model_path="models/ckip-models/bert-base")
+            # st.session_state.ckip_ws_driver = LocalCkipWordSegmenter(model_path="models/ckip-models/bert-base")
+
+            st.session_state.ckip_ws_driver = LocalCkipWordSegmenter(model_path="ckiplab/bert-base-chinese-ws")
 
             # Debug message
             # ws_driver = st.session_state.ckip_ws_driver
