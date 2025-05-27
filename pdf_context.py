@@ -21,29 +21,33 @@ for pkg in nltk_packages:
         nltk.download(pkg, download_dir=nltk_data_path, quiet=True)
 
 # --- 本地載入 CKIP word segmenter (延遲初始化) ---
-def lazy_init_ckip_ws_driver():
+def lazy_init_ckip_ws_driver(local=False):
     if "ckip_ws_driver" not in st.session_state:
-        with st.spinner("🔄 Loading local CKIP word segmenter..."):
+        if local:
+            with st.spinner("🔄 Loading local CKIP word segmenter..."):
 
-            # from ckip_transformers.nlp import CkipWordSegmenter, CkipPosTagger, CkipNerChunker
-            # st.session_state.ckip_ws_driver = CkipWordSegmenter(model="bert-base")
+                # from ckip_transformers.nlp import CkipWordSegmenter, CkipPosTagger, CkipNerChunker
+                # st.session_state.ckip_ws_driver = CkipWordSegmenter(model="bert-base")
 
-            # st.session_state.ckip_ws_driver = LocalCkipWordSegmenter(model_path="models/ckip-models/bert-base")
+                # 使用本地模型載入 CKIP Word Segmenter
+                st.session_state.ckip_ws_driver = LocalCkipWordSegmenter(model_path="models/ckip-models/bert-base")
 
-            st.session_state.ckip_ws_driver = LocalCkipWordSegmenter(model_path="ckiplab/bert-base-chinese-ws")
+                # Debug message
+                # ws_driver = st.session_state.ckip_ws_driver
+                # # 印 tokenizer 資訊
+                # print(f"Tokenizer vocab size: {len(ws_driver.tokenizer.vocab)}")
+                # print(f"Tokenizer special tokens: {ws_driver.tokenizer.special_tokens_map}")
 
-            # Debug message
-            # ws_driver = st.session_state.ckip_ws_driver
-            # # 印 tokenizer 資訊
-            # print(f"Tokenizer vocab size: {len(ws_driver.tokenizer.vocab)}")
-            # print(f"Tokenizer special tokens: {ws_driver.tokenizer.special_tokens_map}")
+                # # 印 model 資訊
+                # print(f"Model architecture: {ws_driver.model.config.architectures}")
+                # print(f"Model hidden size: {ws_driver.model.config.hidden_size}")
+                # print(f"Model num_labels: {ws_driver.model.config.num_labels}")
 
-            # # 印 model 資訊
-            # print(f"Model architecture: {ws_driver.model.config.architectures}")
-            # print(f"Model hidden size: {ws_driver.model.config.hidden_size}")
-            # print(f"Model num_labels: {ws_driver.model.config.num_labels}")
-
-            st.success("✅ Local CKIP WS loaded successfully!")
+                st.success("✅ Local CKIP WS loaded successfully!")
+        else:
+            with st.spinner("🔄 Loading Huggging Face CKIP model..."):
+                st.session_state.ckip_ws_driver = LocalCkipWordSegmenter(model_path="ckiplab/bert-base-chinese-ws")
+                st.success("✅ Huggingface CKIP WS loaded successfully!")
 
 # --- 停用詞表 (自定義 ESG report) ---
 def load_pdf_stopwords():
