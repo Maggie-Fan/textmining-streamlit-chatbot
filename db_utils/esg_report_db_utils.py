@@ -73,26 +73,6 @@ def insert_company(company_name_zh=None, industry_name_zh=None, company_name_en=
         """, (company_name_zh, company_name_en, industry_id))
         conn.commit()
 
-<<<<<<< HEAD
-def insert_esg_report_by_id(company_id, report_year, content, overwrite=False):
-    with sqlite3.connect("db/esg_reports.db") as conn:
-        cursor = conn.cursor()
-
-        if overwrite:
-            cursor.execute("""
-                DELETE FROM ESG_Report
-                WHERE company_id = ? AND report_year = ?
-            """, (company_id, report_year))
-            print(f"🧹 Overwritten ESG report: company_id={company_id}, year={report_year}")
-        else:
-            cursor.execute("""
-                SELECT 1 FROM ESG_Report
-                WHERE company_id = ? AND report_year = ?
-            """, (company_id, report_year))
-            if cursor.fetchone():
-                print("⚠️ Report already exists. Skipping insert.")
-                return
-=======
 def insert_esg_report_by_id(company_id, report_year, content):
     with sqlite3.connect("db/esg_reports.db") as conn:
         cursor = conn.cursor()
@@ -105,18 +85,13 @@ def insert_esg_report_by_id(company_id, report_year, content):
         if cursor.fetchone():
             print("⚠️ Report already exists. Skipping insert.")
             return False
->>>>>>> 010d56c (Reinitialize repo after clearing Git corruption)
 
         cursor.execute("""
             INSERT INTO ESG_Report (company_id, report_year, content)
             VALUES (?, ?, ?)
         """, (company_id, report_year, content))
         conn.commit()
-<<<<<<< HEAD
-
-=======
         return True
->>>>>>> 010d56c (Reinitialize repo after clearing Git corruption)
 
 def get_all_esg_reports():
     with sqlite3.connect(ESG_DB_PATH) as conn:
@@ -156,8 +131,6 @@ def get_all_industries():
             ORDER BY industry_name_en
         """, conn)
     return df
-<<<<<<< HEAD
-=======
 
 def get_industry_by_company(company_name: str):
     """
@@ -291,4 +264,3 @@ def clean_incomplete_company_and_industry():
                OR industry_name_en IS NULL
         """)
         conn.commit()
->>>>>>> 010d56c (Reinitialize repo after clearing Git corruption)

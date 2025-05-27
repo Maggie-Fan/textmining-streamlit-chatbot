@@ -1,10 +1,6 @@
 # 💬 Chatbot template
 
-<<<<<<< HEAD
-A simple Streamlit app that shows how to build a chatbot using OpenAI's GPT-3.5.
-=======
 A simple Streamlit app that shows how to build a chatbot using Gemini (OpenAI's GPT-3.5).
->>>>>>> 010d56c (Reinitialize repo after clearing Git corruption)
 
 [![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://chatbot-template.streamlit.app/)
 
@@ -57,17 +53,6 @@ A simple Streamlit app that shows how to build a chatbot using Gemini (OpenAI's 
       $ pip install autogen
       ```
 
-<<<<<<< HEAD
-### ESG Repots db
-- Initialize the Industry and Company tables into esg_reports.db
-
-   ```
-   $ python init_twse_data.py
-   ```
-- View the contents of Industry, Company, and ESG_Report tables
-   ```
-   $ python view_db.py
-=======
 ### Note: ESG Repots db (for debug)
 - Initialize the Industry and Company tables into esg_reports.db by scraping TWSE website
 
@@ -77,7 +62,6 @@ A simple Streamlit app that shows how to build a chatbot using Gemini (OpenAI's 
 - View the contents of Industry, Company, and ESG_Report tables
    ```
    $ python test/view_db.py
->>>>>>> 010d56c (Reinitialize repo after clearing Git corruption)
    ```
 
 See deployed:

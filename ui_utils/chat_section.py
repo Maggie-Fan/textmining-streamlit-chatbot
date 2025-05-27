@@ -73,11 +73,6 @@ def render_chat_section(st_c_chat):
                 st.session_state["chat_mode"] = chat_mode
 
         # 輸入框，使用對應的 container 呼叫 chat
-<<<<<<< HEAD
-        if prompt := st.chat_input(placeholder="Please input your command", key="chat_bot"):
-            chat(prompt, chat_container=st_c_chat)
-=======
         with col2:
             if prompt := st.chat_input(placeholder="Ask me about the ESG report", key="chat_bot"):
                 chat(prompt, chat_container=st_c_chat)
->>>>>>> 010d56c (Reinitialize repo after clearing Git corruption)
