@@ -1,11 +1,14 @@
 from pathlib import Path
 from transformers import AutoTokenizer, AutoConfig, AutoModelForTokenClassification
 import torch
-from typing import List
+from typing import List, Union
 
 class LocalCkipWordSegmenter:
-    def __init__(self, model_path: str = "models/ckip-models/ckip-bert-ws"):
-        self.model_path = Path(model_path)
+    def __init__(self, model_path: Union[str, Path] = "models/ckip-models/bert-base"):
+        if isinstance(model_path, Path):
+            model_path = str(model_path)
+        self.model_path = model_path.replace("\\", "/")  # 💡 避免 Windows 把 / 轉成 \ 導致 repo id 失效
+
         self.tokenizer = AutoTokenizer.from_pretrained(self.model_path)
         self.config = AutoConfig.from_pretrained(self.model_path)
         self.model = AutoModelForTokenClassification.from_pretrained(self.model_path)
