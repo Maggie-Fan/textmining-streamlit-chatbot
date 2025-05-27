@@ -57,6 +57,7 @@ def get_bilingual_twse_company_industry():
     return merged
 
 def write_twse_example_to_db():
+<<<<<<< HEAD
     # ✅ 先建立資料表
     init_esg_report_db()
     # 檢查 DB 是否已經有資料
@@ -92,3 +93,46 @@ def write_twse_example_to_db():
             print(f"❌ Failed to insert: {company_zh} - {industry_zh} — {e}")
 
 
+=======
+    # init_esg_report_db()
+
+    df = get_bilingual_twse_company_industry()
+    df = df.drop_duplicates(subset=["公司名稱中文"]).reset_index(drop=True)
+
+    with sqlite3.connect("db/esg_reports.db") as conn:
+        cursor = conn.cursor()
+
+        for _, row in df.iterrows():
+            company_zh = row["公司名稱中文"]
+            company_en = row["公司名稱英文"]
+            industry_zh = row["產業別中文"]
+            industry_en = row["產業別英文"]
+
+            try:
+                insert_company(
+                    company_name_zh=company_zh,
+                    industry_name_zh=industry_zh,
+                    company_name_en=company_en,
+                    industry_name_en=industry_en
+                )
+            except Exception as e:
+                print(f"❌ Failed to insert: {company_zh} - {industry_zh} — {e}")
+
+        
+        cursor.execute("""
+            DELETE FROM Company
+            WHERE company_name_zh IS NULL
+               OR company_name_en IS NULL
+               OR industry_id IS NULL
+        """)
+
+        
+        cursor.execute("""
+            DELETE FROM Industry
+            WHERE industry_name_zh IS NULL
+               OR industry_name_en IS NULL
+        """)
+
+        conn.commit()
+        print("✅ TWSE company & industry data updated and cleaned.")
+>>>>>>> 010d56c (Reinitialize repo after clearing Git corruption)

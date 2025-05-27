@@ -3,10 +3,18 @@ import json
 import fitz  # PyMuPDF
 import streamlit as st
 from pdf_context import *
+<<<<<<< HEAD
 import sqlite3
 from db_utils.esg_report_db_utils import (
     insert_industry, insert_company, insert_esg_report_by_id
 )
+=======
+from db_utils.esg_report_db_utils import (
+    insert_esg_report_by_id
+)
+from lib.esg_info_extractor import extract_esg_info_from_pdf
+from db_utils.esg_report_db_utils import insert_or_get_company_id
+>>>>>>> 010d56c (Reinitialize repo after clearing Git corruption)
 
 
 # pdf upload section
@@ -21,7 +29,11 @@ def render_pdf_upload_section():
         )
 
         # Load pdf example button
+<<<<<<< HEAD
         if st.button("📥 Load Example PDF"):
+=======
+        if st.button("📥 Load ESG report example (PDF)"):
+>>>>>>> 010d56c (Reinitialize repo after clearing Git corruption)
             with open("db/examples/esg_report_example.pdf", "rb") as f:
                 uploaded_file = io.BytesIO(f.read())  # 包裝成類檔案物件
 
@@ -37,9 +49,14 @@ def render_pdf_upload_section():
         elif uploaded_file and "pdf_text" in st.session_state:
             st.warning("📄 A PDF is already loaded. Click 🗑️ Clear PDF to upload a new one.")
 
+<<<<<<< HEAD
         # 匯入 Gemini Agent
         try:
             from agents.gemini_agent import chat_with_gemini, extract_json_from_gemini_output
+=======
+        # 匯入 Gemini Agent 以取得 ESG report info
+        try:
+>>>>>>> 010d56c (Reinitialize repo after clearing Git corruption)
             GEMINI_ENABLED = bool(st.secrets.get("GEMINI_API_KEY", None))
         except Exception as e:
             GEMINI_ENABLED = False
@@ -48,6 +65,7 @@ def render_pdf_upload_section():
 
         # 若有 PDF 且 Gemini 可用，自動萃取 ESG 報告資訊
         if GEMINI_ENABLED and "pdf_text" in st.session_state and st.session_state["pdf_text"] != None:
+<<<<<<< HEAD
             top_n_pages = [1, 2, 3, 4, 5]  # 預設前 5 頁
             contents = ""
             for p in top_n_pages:
@@ -96,6 +114,9 @@ def render_pdf_upload_section():
             except Exception as e:
                 st.warning(f"⚠️ Failed to parse Gemini output as JSON: {e}")
                 st.code(result)
+=======
+            extract_esg_info_from_pdf(top_n_pages=[1, 2, 3, 4, 5])
+>>>>>>> 010d56c (Reinitialize repo after clearing Git corruption)
 
         # Clear button
         if "pdf_text" in st.session_state:
@@ -107,16 +128,27 @@ def render_pdf_upload_section():
                 st.session_state["file_uploader_key"] = str(time.time())  # 重新生成 key
                 st.rerun()
 
+<<<<<<< HEAD
         # Auto insert into DB if ESG info extracted and not inserted yet
+=======
+         # 自動寫入 ESG Report DB（僅當已解析並尚未寫入）
+>>>>>>> 010d56c (Reinitialize repo after clearing Git corruption)
         if "pdf_info" in st.session_state and "pdf_text" in st.session_state and not st.session_state.get("esg_inserted", False):
             company_name = st.session_state["pdf_info"]["company_name"]
             industry = st.session_state["pdf_info"]["industry"]
             report_year = int(st.session_state["pdf_info"]["report_year"])
+<<<<<<< HEAD
             text_list = st.session_state["pdf_text"][:3]
+=======
+
+            # text_list = st.session_state["pdf_text"][:3]  # for testing: 前 3 頁內容
+            text_list = st.session_state["pdf_text"]  # 全部頁面
+>>>>>>> 010d56c (Reinitialize repo after clearing Git corruption)
             content = "\n\n".join(
                 [page["content"] for page in text_list] if isinstance(text_list[0], dict) else text_list
             )
 
+<<<<<<< HEAD
             try:
                 with sqlite3.connect("db/esg_reports.db") as conn:
                     cursor = conn.cursor()
@@ -159,8 +191,27 @@ def render_pdf_upload_section():
 
                 st.session_state["esg_inserted"] = True
                 st.success("✅ ESG report auto-inserted into the database!")
+=======
+            # 🔍 將 "chinese"/"english" 轉換成 "zh"/"en"
+            lang_detected = st.session_state.get("pdf_language", "english")
+            language = "zh" if lang_detected == "chinese" else "en"
+
+            try:
+                company_id = insert_or_get_company_id(company_name, industry, language)
+                # insert 進 db
+                esg_report_inserted = insert_esg_report_by_id(company_id, report_year, content)
+
+                st.session_state["esg_inserted"] = esg_report_inserted
+                if esg_report_inserted:
+                    st.success("✅ ESG report auto-inserted into the database!")
+                else:
+                    st.warning("⚠️ Report already exists in database.")
+>>>>>>> 010d56c (Reinitialize repo after clearing Git corruption)
 
             except Exception as e:
                 st.error(f"❌ Auto insert failed: {e}")
 
+<<<<<<< HEAD
       
+=======
+>>>>>>> 010d56c (Reinitialize repo after clearing Git corruption)
