@@ -1,5 +1,9 @@
 .streamlit/secrets.toml
 models/ckip-models/ckip-bert-ws
+<<<<<<< HEAD
+=======
+models/ckip-models/bert-base/model.safetensors
+>>>>>>> 010d56c (Reinitialize repo after clearing Git corruption)
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -17,7 +21,10 @@ dist/
 downloads/
 eggs/
 .eggs/
+<<<<<<< HEAD
 lib/
+=======
+>>>>>>> 010d56c (Reinitialize repo after clearing Git corruption)
 lib64/
 parts/
 sdist/
