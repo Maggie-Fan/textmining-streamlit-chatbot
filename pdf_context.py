@@ -25,7 +25,7 @@ def lazy_init_ckip_ws_driver():
     if "ckip_ws_driver" not in st.session_state:
         with st.spinner("🔄 Loading local CKIP word segmenter..."):
 
-            from ckip_transformers.nlp import CkipWordSegmenter, CkipPosTagger, CkipNerChunker
+            # from ckip_transformers.nlp import CkipWordSegmenter, CkipPosTagger, CkipNerChunker
             # st.session_state.ckip_ws_driver = CkipWordSegmenter(model="bert-base")
 
             st.session_state.ckip_ws_driver = LocalCkipWordSegmenter(model_path="models/ckip-models/bert-base")
