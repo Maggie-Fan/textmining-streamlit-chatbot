@@ -89,4 +89,3 @@ def render_pdf_upload_section():
 
             except Exception as e:
                 st.error(f"❌ Auto insert failed: {e}")
-

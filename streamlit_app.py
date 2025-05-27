@@ -10,9 +10,10 @@ from ui_utils.profile_section import render_profile_section
 from ui_utils.ui_utils import *
 from pdf_context import *
 from esg_analysis import *
-#add
 from ui_utils.esg_reports_section import show_esg_report_table
-from response_generator import generate_response
+
+import os
+os.environ["STREAMLIT_WATCHER_TYPE"] = "none"  # 🔧 關掉 watcher，避免觸發 torch.classes bug
 
 def is_valid_image_url(url):
     try:
@@ -157,8 +158,6 @@ def main():
 
     init_db()
 
-
-
     profile = get_user_profile()
     st.session_state.setdefault("user_name", profile.get("user_name", "Brian") if profile else "Brian")
     st.session_state.setdefault("user_image", profile.get("user_image", "https://www.w3schools.com/howto/img_avatar.png"))
@@ -180,7 +179,7 @@ def main():
     if st.session_state.get("show_wordcloud_trigger", False):
         show_wordcloud()
         # st.session_state["show_wordcloud_trigger"] = False  # 清除觸發
-        
+
     if st.session_state.get("show_esg_table", False):
         show_esg_report_table()
 if __name__ == "__main__":
