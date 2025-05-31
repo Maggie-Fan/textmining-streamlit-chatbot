@@ -30,8 +30,8 @@ def render_pdf_upload_section():
         if uploaded_file and "pdf_text" not in st.session_state:
             doc = fitz.open(stream=uploaded_file.read(), filetype="pdf")
 
-            # extracted = extract_text_by_page(doc, max_pages=len(doc)) # 取全部頁面
-            extracted = extract_text_by_page(doc, max_pages=10) # 只取前 10 頁 for testing
+            extracted = extract_text_by_page(doc, max_pages=len(doc)) # 取全部頁面
+            # extracted = extract_text_by_page(doc, max_pages=10) # 只取前 10 頁 for testing
 
             st.session_state["pdf_text"] = extracted
             st.success("✅ PDF uploaded and parsed successfully!")
