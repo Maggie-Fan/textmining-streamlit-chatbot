@@ -10,7 +10,7 @@ google-generativeai==0.8.5
 beautifulsoup4
 ckip-transformers
 jieba
-gensim==4.3.2
+--only-binary :all: gensim==4.3.2
 numpy>=1.26.4
 nltk
 pymupdf
