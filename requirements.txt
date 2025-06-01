@@ -3,13 +3,19 @@ streamlit
 
 # LLM Libraries
 openai
+autogen
+autogen-agentchat
+autogen-ext[openai]
 google-generativeai
+ag2[gemini]
+ag2[openai]
 
 # Data Processing
 beautifulsoup4
+ckip-transformers
 jieba
 gensim
-numpy==1.23.0
+numpy>=1.26.0
 nltk
 pymupdf
 pandas
