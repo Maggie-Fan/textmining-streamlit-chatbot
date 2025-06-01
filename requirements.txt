@@ -1,23 +1,23 @@
 # UI
-streamlit>=1.30.0
+streamlit==1.30.0
 
 # LLM Libraries
-openai>=1.10.0
-google-generativeai>=0.8.0
-autogen
-autogen-agentchat
+openai==1.25.0
+google-generativeai==0.8.5
+autogen==0.2.18
+autogen-agentchat==0.2.18
 
 # Data Processing
 beautifulsoup4
 jieba
-gensim
+gensim>=4.3.2
 numpy>=1.26.0
 nltk
 pymupdf
 pandas
 scikit-learn
 torch>=1.13.0
-transformers>=4.35.0
+transformers>=4.36.2
 
 # Visualization
 matplotlib
