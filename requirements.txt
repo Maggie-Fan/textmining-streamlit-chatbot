@@ -1,14 +1,8 @@
-# UI
 streamlit==1.30.0
-
-# LLM Libraries
 openai==1.25.0
 autogen==0.8.7
 google-generativeai==0.8.5
-
-# Data Processing
 beautifulsoup4
-ckip-transformers
 jieba
 gensim==4.3.2
 numpy==1.26.4
@@ -18,8 +12,6 @@ pandas
 scikit-learn
 torch>=1.13.0
 transformers>=4.30.0
-
-# Visualization
 matplotlib
 plotly
 wordcloud
