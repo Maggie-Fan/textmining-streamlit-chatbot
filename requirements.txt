@@ -11,7 +11,7 @@ autogen-agentchat==0.2.18
 beautifulsoup4
 jieba
 gensim>=4.3.2
-numpy>=1.26.0
+numpy==1.26.4
 nltk
 pymupdf
 pandas
